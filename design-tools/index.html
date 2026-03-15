@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Design Engineer Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#0a0a0c;
+  --surface:#141416;
+  --border:#222228;
+  --text:#e0e0e0;
+  --text2:#888;
+  --text3:#555;
+  --radius:10px;
+  --new:#10b981;
+}
+
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding:0 24px;
+}
+
+/* Header */
+header{
+  padding:28px 0 20px;
+}
+header h1{
+  font-size:16px;
+  font-weight:700;
+  letter-spacing:-0.01em;
+  margin-bottom:2px;
+  color:var(--text);
+}
+header p{
+  font-size:12px;
+  color:var(--text3);
+  line-height:1.4;
+}
+
+/* Category row */
+.category{
+  display:flex;
+  gap:0;
+  padding:0;
+  margin-bottom:14px;
+}
+.category-title{
+  width:140px;
+  flex-shrink:0;
+  font-size:12px;
+  font-weight:400;
+  color:var(--text3);
+  padding-top:1px;
+}
+
+/* Tools inline flow */
+.tools-grid{
+  display:flex;
+  flex-wrap:wrap;
+  gap:1px 14px;
+  flex:1;
+  align-items:center;
+}
+
+.tool-card{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  padding:2px 0;
+  text-decoration:none;
+  color:var(--text2);
+  transition:color 0.1s;
+}
+.tool-card:hover{color:#fff}
+
+.tool-favicon{
+  width:14px;
+  height:14px;
+  border-radius:2px;
+  flex-shrink:0;
+  object-fit:contain;
+}
+.tool-favicon.invert{
+  filter:invert(1) brightness(2);
+}
+
+.tool-name{
+  font-size:13px;
+  font-weight:400;
+}
+
+
+/* Footer */
+footer{
+  text-align:left;
+  padding:20px 0 32px;
+  font-size:12px;
+  font-weight:400;
+  color:var(--text3);
+}
+
+@media(max-width:640px){
+  .container{padding:0 16px}
+  .category{flex-direction:column;gap:4px}
+  .category-title{width:auto}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>Design Engineer Tools</h1>
+  </header>
+  <main id="main"></main>
+  <footer>&copy;2026 by Orlock</footer>
+</div>
+
+<script>
+const TOOLS = [
+  { cat: "Inspiration", tools: [
+    { name: "60fps", url: "https://60fps.design/" },
+    { name: "Awwwards", url: "https://www.awwwards.com/" },
+    { name: "Cosmos", url: "https://www.cosmos.so/" },
+    { name: "Curated Design", url: "https://www.curated.design/" },
+    { name: "Design Spells", url: "https://www.designspells.com/" },
+    { name: "Game UI Database", url: "https://www.gameuidatabase.com/" },
+    { name: "Godly", url: "https://godly.website/" },
+    { name: "HUDS+GUIS", url: "https://www.hudsandguis.com/" },
+    { name: "Interface In Game", url: "https://interfaceingame.com/" },
+    { name: "Layers", url: "https://layers.to/explore" },
+    { name: "loadmo.re", url: "https://loadmo.re/" },
+    { name: "Minimal Gallery", url: "https://minimal.gallery/" },
+    { name: "Minimum", url: "https://mnmm.xyz/" },
+    { name: "Mobbin", url: "https://mobbin.com/" },
+    { name: "Pinterest", url: "https://pinterest.com/" },
+    { name: "Rebrand", url: "https://www.rebrand.gallery/" },
+    { name: "Saaspo", url: "https://saaspo.com/" },
+    { name: "SearchSystem", url: "https://searchsystem.co/" },
+    { name: "SEESAW", url: "https://www.seesaw.website/" },
+    { name: "Supahero", url: "https://www.supahero.io/" },
+    { name: "D1S1", url: "https://d1s1.com/" },
+  ]},
+  { cat: "Components", tools: [
+    { name: "21st.dev", url: "https://21st.dev/" },
+    { name: "Component Gallery", url: "https://component.gallery/" },
+    { name: "Cursify", url: "https://cursify.vercel.app/" },
+    { name: "Fancy Components", url: "https://www.fancycomponents.dev/" },
+    { name: "Framer University", url: "https://framer.university/resources" },
+    { name: "Motion Primitives", url: "https://motion-primitives.com/" },
+    { name: "NumberFlow", url: "https://number-flow.barvian.me/" },
+    { name: "React Bits", url: "https://www.reactbits.dev/" },
+  ]},
+  { cat: "Code Gen", tools: [
+    { name: "Bolt.new", url: "https://bolt.new/" },
+    { name: "ChatGPT Canvas", url: "https://openai.com/index/introducing-canvas/" },
+    { name: "Claude Code", url: "https://claude.com/product/claude-code" },
+    { name: "Lovable", url: "https://lovable.dev/" },
+    { name: "OpenAI Codex", url: "https://openai.com/codex/" },
+    { name: "Replit", url: "https://replit.com/" },
+    { name: "v0 by Vercel", url: "https://v0.dev/" },
+  ]},
+  { cat: "Code Assist", tools: [
+    { name: "Aider", url: "https://aider.chat/" },
+    { name: "Cline", url: "https://cline.bot/" },
+    { name: "Continue", url: "https://www.continue.dev/" },
+    { name: "Cursor", url: "https://www.cursor.com/" },
+    { name: "GitHub Copilot", url: "https://github.com/features/copilot" },
+    { name: "Windsurf", url: "https://codeium.com/windsurf" },
+    { name: "Zed", url: "https://zed.dev/agentic" },
+    { name: "Ghostty", url: "https://ghostty.org/" },
+    { name: "Codex", url: "https://openai.com/codex/" },
+  ]},
+  { cat: "Interface", tools: [
+    { name: "Figma", url: "https://figma.com" },
+    { name: "Framer", url: "https://www.framer.com/" },
+    { name: "Penpot", url: "https://penpot.app/" },
+    { name: "Rive", url: "https://rive.app" },
+  ]},
+  { cat: "Visual", tools: [
+    { name: "Bitspace", url: "https://bitspace.sh/" },
+    { name: "cables", url: "https://cables.gl/" },
+    { name: "Nodes", url: "https://nodes.io/" },
+    { name: "NodeToy", url: "https://nodetoy.co/" },
+    { name: "Paper", url: "https://paper.design/" },
+    { name: "ShaderToy", url: "https://www.shadertoy.com/" },
+    { name: "TouchDesigner", url: "https://derivative.ca/" },
+    { name: "Unicorn.studio", url: "https://www.unicorn.studio/" },
+  ]},
+  { cat: "Motion", tools: [
+    { name: "Cavalry", url: "https://cavalry.scenegroup.co/" },
+    { name: "Jitter", url: "https://jitter.video/" },
+    { name: "Lottie Creator", url: "https://lottiefiles.com/lottie-creator" },
+    { name: "Lottielab", url: "https://www.lottielab.com/" },
+    { name: "Theatre.js", url: "https://www.theatrejs.com/" },
+  ]},
+  { cat: "Screen Recording", tools: [
+    { name: "Recordly", url: "https://recordly.dev/" },
+  ]},
+  { cat: "Audio", tools: [
+    { name: "ElevenLabs", url: "https://elevenlabs.io/" },
+    { name: "FMOD", url: "https://www.fmod.com/" },
+    { name: "Splice", url: "https://splice.com/features/sounds" },
+  ]},
+  { cat: "3D", tools: [
+
+    { name: "Bezi", url: "https://www.bezi.com/" },
+    { name: "Blender", url: "https://www.blender.org/" },
+    { name: "Houdini", url: "https://www.sidefx.com/" },
+    { name: "Spline", url: "https://spline.design/" },
+    { name: "Womp", url: "https://womp.com/" },
+  ]},
+  { cat: "glTF", tools: [
+    { name: "gltfjsx", url: "https://github.com/pmndrs/gltfjsx" },
+    { name: "gltfpack", url: "https://github.com/zeux/meshoptimizer/blob/master/gltf/README.md" },
+    { name: "Needle Viewer", url: "https://viewer.needle.tools/" },
+  ]},
+  { cat: "Digital Fashion", tools: [
+    { name: "CLO", url: "https://www.clo3d.com/" },
+    { name: "Marvelous Designer", url: "https://www.marvelousdesigner.com/" },
+    { name: "Style3D", url: "https://www.linctex.com/" },
+  ]},
+  { cat: "Volumetric", tools: [
+    { name: "Depthkit", url: "https://www.depthkit.tv/" },
+    { name: "KIRI Engine", url: "https://www.kiriengine.app/" },
+    { name: "Luma AI", url: "https://lumalabs.ai/interactive-scenes" },
+    { name: "Polycam", url: "https://poly.cam/" },
+    { name: "RealityScan", url: "https://www.unrealengine.com/en-US/realityscan" },
+    { name: "SuperSplat Editor", url: "https://superspl.at/editor" },
+  ]},
+  { cat: "Whiteboard", tools: [
+    { name: "Excalidraw", url: "https://excalidraw.com/" },
+    { name: "FigJam", url: "https://www.figma.com/figjam/" },
+    { name: "Miro", url: "https://miro.com/" },
+    { name: "Muse", url: "https://museapp.com/" },
+    { name: "tldraw", url: "https://www.tldraw.com/" },
+  ]},
+  { cat: "Web Utility", tools: [
+    { name: "Color.review", url: "https://color.review/" },
+    { name: "Easing Editor", url: "https://animejs.com/easing-editor" },
+    { name: "Easing Functions", url: "https://easings.net/" },
+    { name: "Easing Gradients", url: "https://larsenwork.com/easing-gradients/" },
+    { name: "OKLCH Color Picker", url: "https://oklch.com/" },
+    { name: "Ray.so", url: "https://ray.so/" },
+    { name: "RegExr", url: "https://regexr.com/" },
+    { name: "SVGOMG", url: "https://jakearchibald.github.io/svgomg/" },
+  ]},
+  { cat: "Desktop Utility", tools: [
+    { name: "LocalSend", url: "https://localsend.org/" },
+    { name: "Parsec", url: "https://parsec.app/" },
+    { name: "Raycast", url: "https://www.raycast.com/" },
+    { name: "ShareX", url: "https://getsharex.com/" },
+    { name: "Warp", url: "https://www.warp.dev/" },
+  ]},
+  { cat: "Emoji", tools: [
+    { name: "MakeEmoji", url: "https://makeemoji.com/" },
+  ]},
+];
+
+function getFaviconUrl(url) {
+  try {
+    const u = new URL(url);
+    return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
+  } catch { return ''; }
+}
+
+// Favicons that are dark/black and need inverting on dark backgrounds
+const DARK_FAVICONS = new Set([
+  'godly.website','www.bezi.com','splice.com','zed.dev',
+  'www.hudsandguis.com','interfaceingame.com','www.clo3d.com',
+  'www.depthkit.tv','museapp.com','tldraw.com','github.com',
+  'www.sidefx.com','derivative.ca','www.theatrejs.com',
+  'www.fmod.com','localsend.org','arc.net',
+  'cables.gl','www.tldraw.com','excalidraw.com',
+  'motion-primitives.com','www.fancycomponents.dev','lumalabs.ai',
+]);
+
+function render() {
+  TOOLS.forEach(s => s.tools.sort((a,b) => a.name.localeCompare(b.name, undefined, {sensitivity:'base'})));
+  const main = document.getElementById('main');
+  main.innerHTML = TOOLS.map(section => `
+    <div class="category">
+      <div class="category-title">${section.cat}</div>
+      <div class="tools-grid">
+        ${section.tools.map(t => {
+          let host = '';
+          try { host = new URL(t.url).hostname; } catch {}
+          const inv = DARK_FAVICONS.has(host) ? ' invert' : '';
+          return `<a class="tool-card" href="${t.url}" target="_blank" rel="noopener">
+            <img class="tool-favicon${inv}" src="${getFaviconUrl(t.url)}" alt="" loading="lazy" onerror="this.style.display='none'">
+            <span class="tool-name">${t.name}</span>
+          </a>`;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+render();
+</script>
+</body>
+</html>
