@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEUROTECH REPAIR SERVICE — POC</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@300;400;600;700;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0a0c;
+    --surface: #111114;
+    --surface2: #18181c;
+    --border: #2a2a30;
+    --text: #e0ddd5;
+    --text-dim: #6b6b72;
+    --accent: #c8ff2e;
+    --danger: #ff3b3b;
+    --warn: #ff9f1c;
+    --info: #4ecdc4;
+    --purple: #a78bfa;
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    overflow: hidden;
+    height: 100vh;
+    user-select: none;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    height: 40px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .topbar .title {
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  .topbar .sep { opacity: 0.3; }
+  .topbar .credits { color: var(--text); }
+  .topbar .credits span { color: var(--accent); font-weight: 700; }
+  .topbar .rep { color: var(--text); }
+  .topbar .rep span { color: var(--info); font-weight: 700; }
+
+  /* ── LAYOUT ── */
+  .app {
+    display: grid;
+    grid-template-columns: 280px 1fr 300px;
+    height: calc(100vh - 40px);
+  }
+
+  /* ── LEFT PANEL: JOB INFO ── */
+  .panel-left {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .panel-heading {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 4px;
+  }
+  .chip-info {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .chip-info h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+  .chip-info .meta {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    line-height: 1.8;
+  }
+  .chip-info .meta b { color: var(--text); font-weight: 500; }
+  .chip-info .meta .val-warn { color: var(--warn); }
+  .chip-info .meta .val-danger { color: var(--danger); }
+  .chip-info .meta .val-ok { color: var(--accent); }
+
+  .client-msg {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--text);
+    font-style: italic;
+  }
+  .client-msg .name {
+    font-style: normal;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--warn);
+    margin-bottom: 6px;
+    font-family: var(--mono);
+  }
+
+  .fault-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .fault-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 12px;
+    font-family: var(--mono);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .fault-item:hover { border-color: var(--accent); }
+  .fault-item.active { border-color: var(--accent); background: rgba(200, 255, 46, 0.05); }
+  .fault-item.fixed { border-color: var(--info); opacity: 0.5; }
+  .fault-item .dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .fault-item .dot.sev-1 { background: var(--warn); }
+  .fault-item .dot.sev-2 { background: #ff6b35; }
+  .fault-item .dot.sev-3 { background: var(--danger); }
+  .fault-item .dot.hidden { background: var(--text-dim); opacity: 0.3; }
+  .fault-item .dot.fixed { background: var(--info); }
+  .fault-item .type { flex: 1; }
+  .fault-item .sev { color: var(--text-dim); font-size: 10px; }
+
+  /* ── CENTER: CHIP VIEW ── */
+  .panel-center {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    overflow: hidden;
+  }
+  .panel-center .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(200,255,46,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(200,255,46,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+  }
+  .panel-center .scanline {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(200,255,46,0.015) 2px,
+      rgba(200,255,46,0.015) 4px
+    );
+    pointer-events: none;
+    animation: scanMove 8s linear infinite;
+  }
+  @keyframes scanMove {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(40px); }
+  }
+
+  /* ── CHIP LAYERS VIEW ── */
+  .chip-container {
+    position: relative;
+    width: 520px;
+    height: 520px;
+  }
+  .chip-layer {
+    position: absolute;
+    inset: 0;
+    border-radius: 12px;
+    transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+  }
+  .chip-layer.hidden-layer {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.95);
+  }
+  .chip-layer.active-layer {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .chip-layer.peeled {
+    opacity: 0.15;
+    pointer-events: none;
+    transform: scale(1.08) translateY(-20px);
+    filter: blur(2px);
+  }
+
+  /* Casing layer */
+  .layer-casing {
+    background: linear-gradient(135deg, #1a1a20 0%, #252530 50%, #1a1a20 100%);
+    border: 2px solid #333340;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .layer-casing .chip-label {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+  }
+  .layer-casing .chip-model {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    opacity: 0.5;
+  }
+  .layer-casing .mfr-logo {
+    width: 60px;
+    height: 60px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 18px;
+    color: var(--accent);
+    opacity: 0.4;
+  }
+  .layer-casing .open-hint {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    opacity: 0.6;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.8; }
+  }
+
+  /* Bus layer */
+  .layer-bus {
+    background: #0d0d12;
+    border: 1px solid var(--border);
+  }
+  .layer-bus canvas {
+    width: 100%;
+    height: 100%;
+    border-radius: 12px;
+  }
+
+  /* Module layer */
+  .layer-modules {
+    background: #0d0d12;
+    border: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+    padding: 16px;
+  }
+  .module-slot {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .module-slot:hover { border-color: var(--text-dim); }
+  .module-slot.damaged {
+    border-color: var(--warn);
+    background: rgba(255, 159, 28, 0.05);
+  }
+  .module-slot.destroyed {
+    border-color: var(--danger);
+    background: rgba(255, 59, 59, 0.05);
+  }
+  .module-slot.ok {
+    border-color: rgba(200, 255, 46, 0.2);
+  }
+  .module-slot.replaced {
+    border-color: var(--info);
+    background: rgba(78, 205, 196, 0.05);
+  }
+
+  /* Tool-specific target highlighting */
+  .module-slot.tool-target {
+    animation: toolPulse 1.5s ease-in-out infinite;
+    cursor: crosshair;
+    z-index: 2;
+  }
+  .module-slot.tool-target-scan {
+    box-shadow: 0 0 12px rgba(200,255,46,0.25), inset 0 0 8px rgba(200,255,46,0.08);
+    border-color: var(--accent);
+  }
+  .module-slot.tool-target-reconnect {
+    box-shadow: 0 0 12px rgba(255,159,28,0.3), inset 0 0 8px rgba(255,159,28,0.1);
+    border-color: var(--warn);
+  }
+  .module-slot.tool-target-replace {
+    box-shadow: 0 0 12px rgba(255,59,59,0.3), inset 0 0 8px rgba(255,59,59,0.1);
+    border-color: var(--danger);
+  }
+  .module-slot.tool-target-recover {
+    box-shadow: 0 0 12px rgba(167,139,250,0.3), inset 0 0 8px rgba(167,139,250,0.1);
+    border-color: var(--purple);
+  }
+  @keyframes toolPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.75; }
+  }
+
+  /* Tool-active cursor for center panel */
+  .panel-center.tool-scan { cursor: crosshair; }
+  .panel-center.tool-reconnect { cursor: pointer; }
+  .panel-center.tool-replace { cursor: grab; }
+  .panel-center.tool-recover { cursor: cell; }
+
+  /* Tool indicator overlay */
+  .tool-overlay-label {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 16px;
+    border-radius: 4px;
+    z-index: 10;
+    pointer-events: none;
+    letter-spacing: 0.08em;
+    animation: fadeInDown 0.25s ease-out;
+  }
+  .tool-overlay-label.scan {
+    background: rgba(200,255,46,0.12);
+    border: 1px solid rgba(200,255,46,0.3);
+    color: var(--accent);
+  }
+  .tool-overlay-label.reconnect {
+    background: rgba(255,159,28,0.12);
+    border: 1px solid rgba(255,159,28,0.3);
+    color: var(--warn);
+  }
+  .tool-overlay-label.replace {
+    background: rgba(255,59,59,0.12);
+    border: 1px solid rgba(255,59,59,0.3);
+    color: var(--danger);
+  }
+  .tool-overlay-label.recover {
+    background: rgba(167,139,250,0.12);
+    border: 1px solid rgba(167,139,250,0.3);
+    color: var(--purple);
+  }
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-8px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
+  /* Data sector tool targeting */
+  .data-sector.tool-target-recover {
+    animation: toolPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(167,139,250,0.2);
+    border-color: var(--purple);
+    cursor: cell;
+  }
+  .data-sector.tool-target-scan {
+    animation: toolPulse 1.5s ease-in-out infinite;
+    box-shadow: 0 0 12px rgba(200,255,46,0.15);
+    border-color: var(--accent);
+    cursor: crosshair;
+  }
+  .module-slot .mod-icon {
+    font-size: 20px;
+    opacity: 0.7;
+  }
+  .module-slot .mod-name {
+    text-align: center;
+    line-height: 1.3;
+  }
+  .module-slot .status-badge {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* Data layer */
+  .layer-data {
+    background: #0d0d12;
+    border: 1px solid var(--border);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    overflow-y: auto;
+  }
+  .data-sector {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .data-sector:hover { border-color: var(--text-dim); }
+  .data-sector.corrupted {
+    border-color: var(--warn);
+    background: rgba(255, 159, 28, 0.04);
+  }
+  .data-sector.hidden-data {
+    border-color: var(--purple);
+    background: rgba(167, 139, 250, 0.04);
+  }
+  .data-sector.recovered {
+    border-color: var(--info);
+  }
+  .data-sector .sector-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .data-sector .sector-type { color: var(--text-dim); }
+  .data-sector .sector-status { font-weight: 700; }
+  .data-sector .sector-status.s-ok { color: var(--accent); }
+  .data-sector .sector-status.s-corrupt { color: var(--warn); }
+  .data-sector .sector-status.s-hidden { color: var(--purple); }
+  .data-sector .sector-preview {
+    color: var(--text-dim);
+    font-size: 10px;
+    line-height: 1.5;
+    margin-top: 4px;
+  }
+  .data-sector .data-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  /* ── RIGHT PANEL: TOOLS ── */
+  .panel-right {
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .layer-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .layer-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    cursor: pointer;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.15s;
+  }
+  .layer-btn:hover { border-color: var(--text-dim); }
+  .layer-btn.active { border-color: var(--accent); color: var(--accent); }
+  .layer-btn.locked { opacity: 0.3; cursor: not-allowed; }
+  .layer-btn .depth {
+    width: 16px; height: 16px;
+    background: var(--border);
+    border-radius: 3px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; font-weight: 700;
+  }
+  .layer-btn.active .depth { background: var(--accent); color: var(--bg); }
+
+  .tool-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tool-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .tool-btn:hover { border-color: var(--accent); }
+  .tool-btn.active { border-color: var(--accent); background: rgba(200,255,46,0.06); }
+  .tool-btn .tool-icon { font-size: 16px; }
+  .tool-btn .tool-label { flex: 1; }
+  .tool-btn .tool-key {
+    font-size: 9px;
+    color: var(--text-dim);
+    background: var(--border);
+    padding: 2px 5px;
+    border-radius: 3px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { border-color: var(--accent); }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 700;
+  }
+  .btn-primary:hover { background: #d4ff55; }
+  .btn-danger {
+    border-color: var(--danger);
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: rgba(255,59,59,0.1); }
+  .btn-purple {
+    border-color: var(--purple);
+    color: var(--purple);
+  }
+  .btn-purple:hover { background: rgba(167,139,250,0.1); }
+  .btn-sm { padding: 4px 8px; font-size: 10px; }
+
+  /* ── MODALS / OVERLAYS ── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px;
+    max-width: 650px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+  .modal h2 {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+  .modal h2.danger { color: var(--danger); }
+  .modal h2.purple { color: var(--purple); }
+
+  /* ── NODE RECONNECT PUZZLE ── */
+  .puzzle-grid {
+    display: grid;
+    gap: 2px;
+    margin: 16px auto;
+    width: fit-content;
+  }
+  .puzzle-cell {
+    width: 44px;
+    height: 44px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 700;
+    transition: all 0.1s;
+    position: relative;
+  }
+  .puzzle-cell:hover { border-color: var(--accent); }
+  .puzzle-cell.node-start {
+    background: rgba(200,255,46,0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .puzzle-cell.node-end {
+    background: rgba(78,205,196,0.15);
+    border-color: var(--info);
+    color: var(--info);
+  }
+  .puzzle-cell.path {
+    background: rgba(200,255,46,0.08);
+    border-color: rgba(200,255,46,0.3);
+  }
+  .puzzle-cell.blocked {
+    background: rgba(255,59,59,0.08);
+    border-color: rgba(255,59,59,0.2);
+    cursor: not-allowed;
+  }
+  .puzzle-cell.path::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    opacity: 0.6;
+  }
+
+  /* ── MODULE REPLACE MODAL ── */
+  .inv-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .inv-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+  .inv-item:hover { border-color: var(--accent); }
+  .inv-item.selected { border-color: var(--accent); background: rgba(200,255,46,0.05); }
+  .inv-item .inv-icon { font-size: 18px; }
+  .inv-item .inv-name { flex: 1; color: var(--text); }
+  .inv-item .inv-tier { color: var(--info); }
+  .inv-item .inv-mfr { color: var(--text-dim); font-size: 10px; }
+  .inv-item .inv-price { color: var(--accent); }
+  .inv-compat {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px;
+    border-radius: 4px;
+    margin-top: 8px;
+  }
+  .inv-compat.good { background: rgba(200,255,46,0.06); color: var(--accent); border: 1px solid rgba(200,255,46,0.15); }
+  .inv-compat.warn { background: rgba(255,159,28,0.06); color: var(--warn); border: 1px solid rgba(255,159,28,0.15); }
+  .inv-compat.bad { background: rgba(255,59,59,0.06); color: var(--danger); border: 1px solid rgba(255,59,59,0.15); }
+
+  /* ── DATA RECOVERY PUZZLE ── */
+  .data-puzzle {
+    margin: 16px 0;
+  }
+  .fragment-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin: 12px 0;
+  }
+  .fragment {
+    padding: 10px 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-align: center;
+    cursor: grab;
+    transition: all 0.15s;
+    color: var(--text);
+    line-height: 1.4;
+  }
+  .fragment:hover { border-color: var(--accent); }
+  .fragment.placed {
+    background: rgba(78,205,196,0.08);
+    border-color: var(--info);
+  }
+  .fragment.selected {
+    border-color: var(--accent);
+    background: rgba(200,255,46,0.08);
+    transform: scale(1.05);
+  }
+
+  .recovery-slots {
+    display: flex;
+    gap: 6px;
+    margin: 12px 0;
+    flex-wrap: wrap;
+  }
+  .recovery-slot {
+    min-width: 80px;
+    padding: 10px 8px;
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-align: center;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .recovery-slot:hover { border-color: var(--text-dim); }
+  .recovery-slot.filled {
+    border-style: solid;
+    border-color: var(--info);
+    color: var(--text);
+  }
+  .recovery-slot.correct {
+    border-color: var(--accent);
+    background: rgba(200,255,46,0.05);
+    color: var(--accent);
+  }
+
+  /* ── HIDDEN DATA CHOICE ── */
+  .hidden-data-reveal {
+    background: rgba(167,139,250,0.05);
+    border: 1px solid rgba(167,139,250,0.2);
+    border-radius: 6px;
+    padding: 16px;
+    margin: 12px 0;
+  }
+  .hidden-data-reveal .hdl {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--purple);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .hidden-data-reveal .hd-content {
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .choice-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+  .choice-btn {
+    padding: 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--text);
+  }
+  .choice-btn:hover { border-color: var(--accent); }
+  .choice-btn .choice-label {
+    font-weight: 700;
+    margin-bottom: 4px;
+    font-size: 11px;
+  }
+  .choice-btn .choice-desc {
+    color: var(--text-dim);
+    font-size: 9px;
+  }
+  .choice-btn.chosen {
+    border-color: var(--accent);
+    background: rgba(200,255,46,0.06);
+  }
+
+  /* ── DELIVERY / SCORE ── */
+  .score-card {
+    text-align: center;
+    padding: 20px;
+  }
+  .score-big {
+    font-family: var(--mono);
+    font-size: 64px;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    margin: 16px 0 8px;
+  }
+  .score-big.bad { color: var(--danger); }
+  .score-big.ok { color: var(--warn); }
+  .score-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .score-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 20px 0;
+    text-align: left;
+  }
+  .score-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .score-row .sr-val { font-weight: 700; }
+  .score-row .sr-val.positive { color: var(--accent); }
+  .score-row .sr-val.negative { color: var(--danger); }
+  .client-reaction {
+    font-size: 16px;
+    margin: 16px 0;
+    padding: 12px;
+    border-radius: 6px;
+    font-family: var(--mono);
+  }
+  .client-reaction.satisfied {
+    background: rgba(200,255,46,0.06);
+    border: 1px solid rgba(200,255,46,0.2);
+    color: var(--accent);
+  }
+  .client-reaction.suspicious {
+    background: rgba(167,139,250,0.06);
+    border: 1px solid rgba(167,139,250,0.2);
+    color: var(--purple);
+  }
+  .client-reaction.angry {
+    background: rgba(255,59,59,0.06);
+    border: 1px solid rgba(255,59,59,0.2);
+    color: var(--danger);
+  }
+
+  /* ── LOG ── */
+  .log-entries {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 160px;
+    overflow-y: auto;
+  }
+  .log-entry {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(42,42,48,0.5);
+  }
+  .log-entry .log-time { color: var(--text-dim); opacity: 0.5; }
+  .log-entry .log-action { color: var(--accent); }
+  .log-entry .log-warn { color: var(--warn); }
+  .log-entry .log-danger { color: var(--danger); }
+
+  /* ── INTRO SCREEN ── */
+  .intro-overlay {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 24px;
+    transition: opacity 0.6s;
+  }
+  .intro-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .intro-title {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+  .intro-sub {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .intro-job {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+  }
+  .intro-job .ij-from {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+  .intro-job .ij-msg {
+    font-size: 14px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+  .intro-job .ij-price {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .intro-job .ij-price span { font-weight: 700; font-size: 18px; }
+  .intro-btns {
+    display: flex;
+    gap: 8px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-bar .fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+  }
+
+  /* tooltip */
+  .tooltip {
+    position: fixed;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 6px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text);
+    pointer-events: none;
+    z-index: 300;
+    display: none;
+  }
+
+  /* notification */
+  .notif {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-10px);
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    z-index: 250;
+    opacity: 0;
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .notif.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  .notif.warn { border-color: var(--warn); color: var(--warn); }
+  .notif.danger { border-color: var(--danger); color: var(--danger); }
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div class="intro-overlay" id="intro">
+  <div class="intro-sub">incoming job request</div>
+  <div class="intro-title">NEUROTECH REPAIR SERVICE</div>
+  <div class="intro-job">
+    <div class="ij-from">via messenger &mdash; referral from Dmitriy K.</div>
+    <div class="ij-msg" id="introMsg"></div>
+    <div class="ij-price">Offered: <span id="introPrice"></span> credits</div>
+    <div class="intro-btns">
+      <button class="btn btn-primary" onclick="startJob()">ACCEPT JOB</button>
+      <button class="btn" onclick="rerollJob()">DECLINE &amp; REROLL</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="title">NRS://WORKBENCH</div>
+  <div class="sep">|</div>
+  <div class="credits">CR: <span id="creditsDisplay">2450</span></div>
+  <div class="sep">|</div>
+  <div class="rep">REP: <span id="repDisplay">34</span>/100</div>
+  <div class="sep">|</div>
+  <div id="jobTimer" style="color:var(--text-dim)">--:--</div>
+  <div style="flex:1"></div>
+  <button class="btn btn-primary btn-sm" id="deliverBtn" onclick="deliverJob()" style="display:none">DELIVER JOB</button>
+</div>
+
+<!-- MAIN APP -->
+<div class="app">
+  <!-- LEFT PANEL -->
+  <div class="panel-left">
+    <div>
+      <div class="panel-heading">chip info</div>
+      <div class="chip-info" id="chipInfo"></div>
+    </div>
+    <div>
+      <div class="panel-heading">client</div>
+      <div class="client-msg" id="clientMsg"></div>
+    </div>
+    <div>
+      <div class="panel-heading">diagnostics <span id="faultCount" style="color:var(--accent)"></span></div>
+      <div class="fault-list" id="faultList"></div>
+    </div>
+    <div>
+      <div class="panel-heading">repair log</div>
+      <div class="log-entries" id="repairLog"></div>
+    </div>
+  </div>
+
+  <!-- CENTER: CHIP VIEW -->
+  <div class="panel-center">
+    <div class="grid-bg"></div>
+    <div class="scanline"></div>
+    <div class="chip-container" id="chipContainer">
+      <div class="chip-layer layer-data hidden-layer" id="layerData"></div>
+      <div class="chip-layer layer-modules hidden-layer" id="layerModules"></div>
+      <div class="chip-layer layer-bus hidden-layer" id="layerBus">
+        <canvas id="busCanvas"></canvas>
+      </div>
+      <div class="chip-layer layer-casing active-layer" id="layerCasing" onclick="peelLayer('casing')">
+        <div class="mfr-logo" id="mfrLogo"></div>
+        <div class="chip-label" id="chipLabel"></div>
+        <div class="chip-model" id="chipModel"></div>
+        <div class="open-hint">[ click to open casing ]</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="panel-right">
+    <div>
+      <div class="panel-heading">layers</div>
+      <div class="layer-nav">
+        <button class="layer-btn active" data-layer="casing" onclick="switchLayer('casing')">
+          <div class="depth">1</div> Casing
+        </button>
+        <button class="layer-btn locked" data-layer="bus" onclick="switchLayer('bus')">
+          <div class="depth">2</div> Bus / Connectors
+        </button>
+        <button class="layer-btn locked" data-layer="modules" onclick="switchLayer('modules')">
+          <div class="depth">3</div> Modules
+        </button>
+        <button class="layer-btn locked" data-layer="data" onclick="switchLayer('data')">
+          <div class="depth">4</div> Data Layer
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-heading">tools</div>
+      <div class="tool-grid">
+        <button class="tool-btn" onclick="activateTool('scan')" id="toolScan">
+          <span class="tool-icon">&#9678;</span>
+          <span class="tool-label">Scanner</span>
+          <span class="tool-key">1</span>
+        </button>
+        <button class="tool-btn" onclick="activateTool('reconnect')" id="toolReconnect">
+          <span class="tool-icon">&#9741;</span>
+          <span class="tool-label">Reconnect</span>
+          <span class="tool-key">2</span>
+        </button>
+        <button class="tool-btn" onclick="activateTool('replace')" id="toolReplace">
+          <span class="tool-icon">&#9881;</span>
+          <span class="tool-label">Replace Module</span>
+          <span class="tool-key">3</span>
+        </button>
+        <button class="tool-btn" onclick="activateTool('recover')" id="toolRecover">
+          <span class="tool-icon">&#9731;</span>
+          <span class="tool-label">Data Recovery</span>
+          <span class="tool-key">4</span>
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <div class="panel-heading">skills</div>
+      <div id="skillDisplay" style="font-family:var(--mono);font-size:11px;color:var(--text-dim);line-height:2"></div>
+    </div>
+
+    <div>
+      <div class="panel-heading">inventory</div>
+      <div id="inventoryDisplay" style="font-family:var(--mono);font-size:10px;color:var(--text-dim);line-height:1.8;max-height:120px;overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<!-- OVERLAYS -->
+<div class="overlay" id="puzzleOverlay">
+  <div class="modal" id="puzzleModal"></div>
+</div>
+
+<div class="overlay" id="deliveryOverlay">
+  <div class="modal" id="deliveryModal"></div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ═══════════════════════════════════════
+// GAME STATE
+// ═══════════════════════════════════════
+const STATE = {
+  credits: 2450,
+  reputation: 34,
+  skills: { diagnostics: 2, precision: 1, dataRecovery: 1, negotiation: 1 },
+  inventory: [],
+  currentJob: null,
+  currentLayer: 'casing',
+  activeTool: null,
+  layersUnlocked: ['casing'],
+  repairLog: [],
+  jobStartTime: null,
+  hiddenDataChoices: {},
+};
+
+// ═══════════════════════════════════════
+// DATA: CHIPS, FAULTS, MODULES, CLIENTS
+// ═══════════════════════════════════════
+const MANUFACTURERS = ['PowerElectronics', 'Antario', 'Peuralink'];
+const CHIP_TYPES = ['voice', 'visual', 'projecting', 'neuro', 'pc'];
+const CHIP_TYPE_LABELS = { voice: 'Voice Interface', visual: 'Visual Cortex', projecting: 'HoloProjector', neuro: 'NeuroLink', pc: 'Personal Terminal' };
+
+const MODULE_TYPES = [
+  { type: 'memory_core', name: 'Memory Core', icon: '&#9618;' },
+  { type: 'signal_proc', name: 'Signal Proc', icon: '&#9684;' },
+  { type: 'auth_chip', name: 'Auth Module', icon: '&#9670;' },
+  { type: 'power_reg', name: 'Power Reg', icon: '&#9889;' },
+  { type: 'neural_bridge', name: 'Neural Bridge', icon: '&#10070;' },
+  { type: 'io_controller', name: 'I/O Ctrl', icon: '&#9744;' },
+  { type: 'encryption', name: 'Encryption', icon: '&#9883;' },
+  { type: 'sensor_array', name: 'Sensor Array', icon: '&#9737;' },
+  { type: 'cooling_unit', name: 'Cooling Unit', icon: '&#10052;' },
+  { type: 'bus_adapter', name: 'Bus Adapter', icon: '&#9645;' },
+  { type: 'clock_gen', name: 'Clock Gen', icon: '&#9200;' },
+  { type: 'data_cache', name: 'Data Cache', icon: '&#9638;' },
+  { type: 'rf_module', name: 'RF Module', icon: '&#9978;' },
+  { type: 'haptic_driver', name: 'Haptic Driver', icon: '&#9757;' },
+  { type: 'voltage_conv', name: 'Voltage Conv', icon: '&#9889;' },
+  { type: 'debug_port', name: 'Debug Port', icon: '&#9654;' },
+];
+
+const FAULT_TYPES = [
+  { type: 'disconnection', label: 'Disconnection', repair: 'reconnect' },
+  { type: 'destroyed_module', label: 'Destroyed Module', repair: 'replace' },
+  { type: 'corrupt_data', label: 'Data Corruption', repair: 'recover' },
+  { type: 'hidden_process', label: 'Hidden Process', repair: 'recover' },
+];
+
+const HIDDEN_DATA_CATEGORIES = [
+  {
+    category: 'incriminating',
+    preview: 'Encrypted log files showing unauthorized access to Antario Corp mainframe. Timestamps match the government data breach from last month...',
+    detail: 'Full access logs revealing systematic extraction of citizen surveillance data from Antario Corp servers. Includes IP traces leading to known dissident networks.'
+  },
+  {
+    category: 'personal',
+    preview: 'Fragmented neural memory recordings. Emotional signatures suggest trauma. Some fragments appear to be someone else\'s memories...',
+    detail: 'Illegally copied memories from another person — intimate moments, family gatherings, childhood. This chip\'s owner has been harvesting other people\'s experiences.'
+  },
+  {
+    category: 'corporate',
+    preview: 'Encrypted corporate communiques marked TOP SECRET. Partial decode shows references to "Project LIGHTHOUSE" and mass neural compliance...',
+    detail: 'Internal PowerElectronics memo detailing "Project LIGHTHOUSE" — a firmware update designed to subtly influence consumer behavior through subliminal neural patterns.'
+  },
+  {
+    category: 'government',
+    preview: 'Military-grade encryption. Partial headers show Ministry of Internal Security classification. Accessing this could flag your workstation...',
+    detail: 'Classified dossiers on underground repair technicians. Your name appears on page 3. The government has been monitoring unlicensed repair shops for 18 months.'
+  },
+];
+
+const CLIENT_STORIES = [
+  {
+    name: 'YURI_K',
+    story: 'Hey. My visual interface keeps glitching — random static, sometimes I see fragments of... things that aren\'t there. Probably just a connector issue. Can you take a quick look? Nothing complicated, I promise.',
+    actual: 'Visual cortex chip with disconnected signal paths AND hidden personal data (illegally copied memories). Client is downplaying severity.',
+  },
+  {
+    name: 'ANON_7X2',
+    story: 'No questions. Chip needs a full diagnostic. Some modules might be fried. Pay is good. Don\'t look at the data layer unless you want problems.',
+    actual: 'Black market job. Multiple destroyed modules, corrupted data, and incriminating hidden data. Client is a hacker covering tracks.',
+  },
+  {
+    name: 'ELENA_V',
+    story: 'I\'m an artist — my projecting interface stopped rendering properly last week. Colors are wrong, textures are corrupted. I need it for my exhibition next month. Please be careful with the memory sectors, my entire portfolio is on there.',
+    actual: 'Projecting chip with data corruption and a hidden process running in the background (corporate spyware planted by her gallery\'s sponsor).',
+  },
+  {
+    name: 'CPT_VOLKOV',
+    story: 'Military-grade neuro interface, model N-7. Power regulation is failing, and I\'m getting feedback spikes. Standard repair, standard parts. I\'ll pay standard rates. No need to go deeper than the module layer.',
+    actual: 'NeuroLink with destroyed power regulator AND government classified data hidden in the data layer. Client knows about the data and is testing you.',
+  },
+];
+
+// ═══════════════════════════════════════
+// JOB GENERATION
+// ═══════════════════════════════════════
+function generateJob() {
+  const clientIdx = Math.floor(Math.random() * CLIENT_STORIES.length);
+  const client = CLIENT_STORIES[clientIdx];
+  const mfr = MANUFACTURERS[Math.floor(Math.random() * MANUFACTURERS.length)];
+  const chipType = CHIP_TYPES[Math.floor(Math.random() * CHIP_TYPES.length)];
+  const powerUnits = ['THz', 'PHz', 'EHz'];
+  const pu = powerUnits[Math.floor(Math.random() * 3)];
+  const powerVal = pu === 'THz' ? (Math.random() * 900 + 100).toFixed(0) : pu === 'PHz' ? (Math.random() * 90 + 10).toFixed(1) : (Math.random() * 9 + 1).toFixed(2);
+
+  // Generate modules (16 slots)
+  const shuffled = [...MODULE_TYPES].sort(() => Math.random() - 0.5);
+  const modules = shuffled.map((m, i) => ({
+    ...m,
+    id: `mod_${i}`,
+    status: 'ok',
+    tier: Math.floor(Math.random() * 3) + 1,
+    manufacturer: MANUFACTURERS[Math.floor(Math.random() * 3)],
+  }));
+
+  // Generate faults (3-5)
+  const faultCount = 3 + Math.floor(Math.random() * 3);
+  const faults = [];
+  const usedModules = new Set();
+
+  for (let i = 0; i < faultCount; i++) {
+    const ft = FAULT_TYPES[Math.floor(Math.random() * FAULT_TYPES.length)];
+    let targetMod;
+    do {
+      targetMod = Math.floor(Math.random() * 16);
+    } while (usedModules.has(targetMod));
+    usedModules.add(targetMod);
+
+    const severity = Math.min(3, Math.floor(Math.random() * 3) + 1);
+    const discoverable = severity <= STATE.skills.diagnostics || Math.random() > 0.4;
+
+    if (ft.type === 'destroyed_module') {
+      modules[targetMod].status = 'destroyed';
+    } else if (ft.type === 'disconnection') {
+      modules[targetMod].status = 'damaged';
+    } else if (ft.type === 'corrupt_data') {
+      modules[targetMod].status = 'corrupted';
+    }
+
+    faults.push({
+      id: `fault_${i}`,
+      componentId: modules[targetMod].id,
+      componentName: modules[targetMod].name,
+      faultType: ft.type,
+      faultLabel: ft.label,
+      repairAction: ft.repair,
+      severity,
+      discoverable,
+      discovered: false,
+      fixed: false,
+    });
+  }
+
+  // Hidden data (1-2)
+  const hdCount = 1 + Math.floor(Math.random() * 2);
+  const hiddenData = [];
+  const hdCats = [...HIDDEN_DATA_CATEGORIES].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < hdCount; i++) {
+    hiddenData.push({
+      id: `hd_${i}`,
+      ...hdCats[i],
+      fragmentCount: 4 + Math.floor(Math.random() * 4),
+      recovered: 0,
+      playerAction: null,
+    });
+  }
+
+  const price = (150 + Math.floor(Math.random() * 350)) * (1 + faultCount * 0.1);
+
+  return {
+    id: `job_${Date.now()}`,
+    client,
+    chip: {
+      manufacturer: mfr,
+      type: chipType,
+      typeLabel: CHIP_TYPE_LABELS[chipType],
+      power: `${powerVal} ${pu}`,
+      batteryLife: (Math.random() * 0.6 + 0.2).toFixed(2),
+      dataLoss: (Math.random() * 0.4).toFixed(2),
+      modules,
+      faults,
+      hiddenData,
+    },
+    agreedPrice: Math.round(price),
+  };
+}
+
+function generateInventory() {
+  const items = [];
+  const types = MODULE_TYPES.slice(0, 10);
+  for (let i = 0; i < 8; i++) {
+    const mt = types[Math.floor(Math.random() * types.length)];
+    const tier = Math.floor(Math.random() * 3) + 1;
+    const mfr = MANUFACTURERS[Math.floor(Math.random() * 3)];
+    items.push({
+      id: `inv_${i}`,
+      type: mt.type,
+      name: mt.name,
+      icon: mt.icon,
+      tier,
+      manufacturer: mfr,
+      cost: tier * 30 + Math.floor(Math.random() * 40),
+    });
+  }
+  return items;
+}
+
+// ═══════════════════════════════════════
+// INIT / RENDER
+// ═══════════════════════════════════════
+let currentJobData = generateJob();
+
+function initIntro() {
+  STATE.inventory = generateInventory();
+  renderIntro();
+}
+
+function renderIntro() {
+  document.getElementById('introMsg').textContent = currentJobData.client.story;
+  document.getElementById('introPrice').textContent = currentJobData.agreedPrice;
+}
+
+function rerollJob() {
+  currentJobData = generateJob();
+  STATE.inventory = generateInventory();
+  renderIntro();
+}
+
+function startJob() {
+  STATE.currentJob = currentJobData;
+  STATE.layersUnlocked = ['casing'];
+  STATE.currentLayer = 'casing';
+  STATE.activeTool = null;
+  STATE.repairLog = [];
+  STATE.hiddenDataChoices = {};
+  STATE.jobStartTime = Date.now();
+
+  document.getElementById('intro').classList.add('hidden');
+  renderAll();
+  startTimer();
+}
+
+function renderAll() {
+  renderChipInfo();
+  renderClientMsg();
+  renderFaults();
+  renderSkills();
+  renderInventory();
+  renderLayers();
+  renderLayerNav();
+  renderLog();
+  updateCreditsDisplay();
+  checkDeliverReady();
+}
+
+function renderChipInfo() {
+  const chip = STATE.currentJob.chip;
+  const bat = parseFloat(chip.batteryLife);
+  const dl = parseFloat(chip.dataLoss);
+  document.getElementById('chipInfo').innerHTML = `
+    <h3>${chip.typeLabel}</h3>
+    <div class="meta">
+      <b>MFR:</b> ${chip.manufacturer}<br>
+      <b>PWR:</b> ${chip.power}<br>
+      <b>BAT:</b> <span class="${bat < 0.3 ? 'val-danger' : bat < 0.6 ? 'val-warn' : 'val-ok'}">${(bat * 100).toFixed(0)}%</span><br>
+      <b>DATA LOSS:</b> <span class="${dl > 0.2 ? 'val-danger' : dl > 0.1 ? 'val-warn' : 'val-ok'}">${(dl * 100).toFixed(0)}%</span>
+    </div>
+  `;
+}
+
+function renderClientMsg() {
+  const c = STATE.currentJob.client;
+  document.getElementById('clientMsg').innerHTML = `
+    <div class="name">${c.name}</div>
+    ${c.story}
+  `;
+}
+
+function renderFaults() {
+  const faults = STATE.currentJob.chip.faults;
+  const discovered = faults.filter(f => f.discovered);
+  const total = faults.length;
+  document.getElementById('faultCount').textContent = `(${discovered.length}/${total > discovered.length ? '?' : total})`;
+
+  const list = document.getElementById('faultList');
+  list.innerHTML = '';
+
+  faults.forEach(f => {
+    if (!f.discovered) return;
+    const div = document.createElement('div');
+    div.className = `fault-item ${f.fixed ? 'fixed' : ''}`;
+    div.innerHTML = `
+      <div class="dot ${f.fixed ? 'fixed' : 'sev-' + f.severity}"></div>
+      <div class="type">${f.faultLabel}<br><span style="font-size:9px;color:var(--text-dim)">${f.componentName}</span></div>
+      <div class="sev">${f.fixed ? 'FIXED' : 'SEV ' + f.severity}</div>
+    `;
+    if (!f.fixed) {
+      div.onclick = () => startRepair(f);
+    }
+    list.appendChild(div);
+  });
+}
+
+function renderSkills() {
+  const s = STATE.skills;
+  document.getElementById('skillDisplay').innerHTML = `
+    DIAG: ${'&#9608;'.repeat(s.diagnostics)}${'&#9617;'.repeat(5 - s.diagnostics)} ${s.diagnostics}/5<br>
+    PREC: ${'&#9608;'.repeat(s.precision)}${'&#9617;'.repeat(5 - s.precision)} ${s.precision}/5<br>
+    DATA: ${'&#9608;'.repeat(s.dataRecovery)}${'&#9617;'.repeat(5 - s.dataRecovery)} ${s.dataRecovery}/5<br>
+    NEGO: ${'&#9608;'.repeat(s.negotiation)}${'&#9617;'.repeat(5 - s.negotiation)} ${s.negotiation}/5
+  `;
+}
+
+function renderInventory() {
+  document.getElementById('inventoryDisplay').innerHTML = STATE.inventory.map(it =>
+    `${it.name} T${it.tier} [${it.manufacturer.substring(0,3).toUpperCase()}] — ${it.cost}cr`
+  ).join('<br>');
+}
+
+function renderLayerNav() {
+  document.querySelectorAll('.layer-btn').forEach(btn => {
+    const layer = btn.dataset.layer;
+    btn.classList.toggle('active', layer === STATE.currentLayer);
+    btn.classList.toggle('locked', !STATE.layersUnlocked.includes(layer));
+  });
+}
+
+function updateCreditsDisplay() {
+  document.getElementById('creditsDisplay').textContent = STATE.credits;
+  document.getElementById('repDisplay').textContent = STATE.reputation;
+}
+
+// ═══════════════════════════════════════
+// LAYERS
+// ═══════════════════════════════════════
+const LAYER_ORDER = ['casing', 'bus', 'modules', 'data'];
+const LAYER_IDS = { casing: 'layerCasing', bus: 'layerBus', modules: 'layerModules', data: 'layerData' };
+
+function peelLayer(layer) {
+  const idx = LAYER_ORDER.indexOf(layer);
+  if (idx < 0) return;
+  const nextLayer = LAYER_ORDER[idx + 1];
+  if (!nextLayer) return;
+
+  if (!STATE.layersUnlocked.includes(nextLayer)) {
+    STATE.layersUnlocked.push(nextLayer);
+  }
+
+  switchLayer(nextLayer);
+  addLog(`Opened ${nextLayer} layer`, 'action');
+  notify(`${nextLayer.toUpperCase()} layer exposed`);
+}
+
+function switchLayer(layer) {
+  if (!STATE.layersUnlocked.includes(layer)) return;
+  STATE.currentLayer = layer;
+
+  LAYER_ORDER.forEach(l => {
+    const el = document.getElementById(LAYER_IDS[l]);
+    const lIdx = LAYER_ORDER.indexOf(l);
+    const cIdx = LAYER_ORDER.indexOf(layer);
+
+    if (l === layer) {
+      el.className = `chip-layer layer-${l} active-layer`;
+    } else if (lIdx < cIdx) {
+      el.className = `chip-layer layer-${l} peeled`;
+    } else {
+      el.className = `chip-layer layer-${l} hidden-layer`;
+    }
+  });
+
+  renderLayerNav();
+  renderLayers();
+}
+
+function renderLayers() {
+  if (STATE.currentLayer === 'casing') renderCasing();
+  if (STATE.currentLayer === 'bus') renderBus();
+  if (STATE.currentLayer === 'modules') renderModuleLayer();
+  if (STATE.currentLayer === 'data') renderDataLayer();
+}
+
+function renderCasing() {
+  const chip = STATE.currentJob.chip;
+  document.getElementById('mfrLogo').textContent = chip.manufacturer.substring(0, 2).toUpperCase();
+  document.getElementById('chipLabel').textContent = chip.typeLabel;
+  document.getElementById('chipModel').textContent = `${chip.manufacturer} — ${chip.power}`;
+}
+
+function renderBus() {
+  const canvas = document.getElementById('busCanvas');
+  const container = document.getElementById('layerBus');
+  canvas.width = 520;
+  canvas.height = 520;
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 520, 520);
+
+  // Draw PCB-style traces
+  ctx.strokeStyle = 'rgba(200,255,46,0.08)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < 20; i++) {
+    ctx.beginPath();
+    const y = 26 * i + 10;
+    ctx.moveTo(0, y);
+    for (let x = 0; x < 520; x += 40) {
+      const jitter = Math.random() > 0.8 ? (Math.random() - 0.5) * 20 : 0;
+      ctx.lineTo(x + 40, y + jitter);
+    }
+    ctx.stroke();
+  }
+
+  // Draw connector nodes
+  const modules = STATE.currentJob.chip.modules;
+  const faults = STATE.currentJob.chip.faults;
+  modules.forEach((mod, i) => {
+    const col = i % 4;
+    const row = Math.floor(i / 4);
+    const x = 65 + col * 130;
+    const y = 65 + row * 130;
+
+    const fault = faults.find(f => f.componentId === mod.id);
+    const hasDisconnect = fault && fault.faultType === 'disconnection';
+
+    // Determine if this node is a tool target
+    const isToolTarget =
+      STATE.activeTool === 'scan' ||
+      (STATE.activeTool === 'reconnect' && mod.status === 'damaged' && fault && !fault.fixed) ||
+      (STATE.activeTool === 'replace' && mod.status === 'destroyed') ||
+      (STATE.activeTool === 'recover' && mod.status === 'corrupted' && fault && !fault.fixed);
+
+    // Tool-specific outer glow ring
+    if (isToolTarget && STATE.activeTool) {
+      const glowColor = STATE.activeTool === 'scan' ? 'rgba(200,255,46,0.2)' :
+                         STATE.activeTool === 'reconnect' ? 'rgba(255,159,28,0.25)' :
+                         STATE.activeTool === 'replace' ? 'rgba(255,59,59,0.25)' :
+                         'rgba(167,139,250,0.25)';
+      ctx.fillStyle = glowColor;
+      ctx.beginPath();
+      ctx.arc(x, y, 26, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Animated ring (using time-based pulse)
+      const ringColor = STATE.activeTool === 'scan' ? 'rgba(200,255,46,0.4)' :
+                         STATE.activeTool === 'reconnect' ? 'rgba(255,159,28,0.5)' :
+                         STATE.activeTool === 'replace' ? 'rgba(255,59,59,0.5)' :
+                         'rgba(167,139,250,0.5)';
+      ctx.strokeStyle = ringColor;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.arc(x, y, 24, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    ctx.fillStyle = mod.status === 'destroyed' ? 'rgba(255,59,59,0.3)' :
+                    mod.status === 'damaged' ? 'rgba(255,159,28,0.3)' :
+                    mod.status === 'corrupted' ? 'rgba(167,139,250,0.3)' :
+                    'rgba(200,255,46,0.1)';
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = mod.status === 'ok' ? 'rgba(200,255,46,0.2)' :
+                      mod.status === 'destroyed' ? 'rgba(255,59,59,0.5)' :
+                      mod.status === 'damaged' ? 'rgba(255,159,28,0.5)' :
+                      'rgba(167,139,250,0.5)';
+    ctx.lineWidth = isToolTarget ? 2.5 : 1.5;
+    ctx.beginPath();
+    ctx.arc(x, y, 16, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Draw connection lines between adjacent nodes
+    if (col < 3) {
+      const nx = x + 130;
+      const isBreak = hasDisconnect && Math.random() > 0.5;
+      ctx.strokeStyle = isBreak ? 'rgba(255,59,59,0.3)' : 'rgba(200,255,46,0.06)';
+      ctx.lineWidth = isBreak ? 2 : 1;
+      ctx.setLineDash(isBreak ? [4, 4] : []);
+      ctx.beginPath();
+      ctx.moveTo(x + 16, y);
+      ctx.lineTo(nx - 16, y);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+    if (row < 3) {
+      const ny = y + 130;
+      ctx.strokeStyle = 'rgba(200,255,46,0.06)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, y + 16);
+      ctx.lineTo(x, ny - 16);
+      ctx.stroke();
+    }
+
+    // Label
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.font = '8px JetBrains Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(mod.name, x, y + 28);
+  });
+
+  // Click handler for all tools on bus layer
+  container.onclick = (e) => {
+    if (!STATE.activeTool) return;
+    const rect = canvas.getBoundingClientRect();
+    const cx = (e.clientX - rect.left) * (520 / rect.width);
+    const cy = (e.clientY - rect.top) * (520 / rect.height);
+
+    modules.forEach((mod, i) => {
+      const col = i % 4;
+      const row = Math.floor(i / 4);
+      const x = 65 + col * 130;
+      const y = 65 + row * 130;
+      const dist = Math.hypot(cx - x, cy - y);
+
+      if (dist < 30) {
+        const fault = faults.find(f => f.componentId === mod.id && !f.fixed);
+        if (STATE.activeTool === 'scan') {
+          scanComponent(mod);
+        } else if (STATE.activeTool === 'reconnect' && fault && fault.faultType === 'disconnection') {
+          startRepair(fault);
+        } else if (STATE.activeTool === 'replace' && mod.status === 'destroyed') {
+          openReplaceModal(mod);
+        } else if (STATE.activeTool === 'recover' && fault && (fault.faultType === 'corrupt_data' || fault.faultType === 'hidden_process')) {
+          startRepair(fault);
+        } else if (STATE.activeTool === 'scan') {
+          scanComponent(mod);
+        }
+      }
+    });
+  };
+}
+
+function renderModuleLayer() {
+  const container = document.getElementById('layerModules');
+  const modules = STATE.currentJob.chip.modules;
+  container.innerHTML = '';
+
+  modules.forEach((mod, i) => {
+    const slot = document.createElement('div');
+    const statusClass = mod.status === 'replaced' ? 'replaced' : mod.status;
+    let toolTargetClass = '';
+
+    // Determine if this module is a valid target for the active tool
+    const fault = STATE.currentJob.chip.faults.find(f => f.componentId === mod.id);
+    if (STATE.activeTool === 'scan') {
+      toolTargetClass = 'tool-target tool-target-scan';
+    } else if (STATE.activeTool === 'reconnect' && mod.status === 'damaged' && fault && !fault.fixed) {
+      toolTargetClass = 'tool-target tool-target-reconnect';
+    } else if (STATE.activeTool === 'replace' && mod.status === 'destroyed') {
+      toolTargetClass = 'tool-target tool-target-replace';
+    } else if (STATE.activeTool === 'recover' && (mod.status === 'corrupted') && fault && !fault.fixed) {
+      toolTargetClass = 'tool-target tool-target-recover';
+    }
+
+    slot.className = `module-slot ${statusClass} ${toolTargetClass}`;
+    slot.innerHTML = `
+      <span class="mod-icon">${mod.icon}</span>
+      <span class="mod-name">${mod.name}</span>
+      <span style="font-size:8px;color:var(--text-dim)">T${mod.tier} ${mod.manufacturer.substring(0,3)}</span>
+      <div class="status-badge" style="background:${
+        mod.status === 'ok' ? 'var(--accent)' :
+        mod.status === 'destroyed' ? 'var(--danger)' :
+        mod.status === 'damaged' ? 'var(--warn)' :
+        mod.status === 'corrupted' ? 'var(--purple)' :
+        mod.status === 'replaced' ? 'var(--info)' : 'var(--text-dim)'
+      }"></div>
+    `;
+
+    slot.onclick = () => {
+      if (STATE.activeTool === 'scan') {
+        scanComponent(mod);
+      } else if (STATE.activeTool === 'replace' && mod.status === 'destroyed') {
+        openReplaceModal(mod);
+      } else if (STATE.activeTool === 'reconnect' && mod.status === 'damaged' && fault && !fault.fixed) {
+        startRepair(fault);
+      } else if (STATE.activeTool === 'recover' && mod.status === 'corrupted' && fault && !fault.fixed) {
+        startRepair(fault);
+      }
+    };
+
+    container.appendChild(slot);
+  });
+}
+
+function renderDataLayer() {
+  const container = document.getElementById('layerData');
+  container.innerHTML = '';
+
+  // Data sectors — some corrupted, some hidden data
+  const faults = STATE.currentJob.chip.faults.filter(f => f.faultType === 'corrupt_data' || f.faultType === 'hidden_process');
+  const hiddenData = STATE.currentJob.chip.hiddenData;
+
+  // Normal data sectors
+  const sectors = ['System Config', 'User Preferences', 'Neural Mappings', 'Sensory Cache', 'App Registry', 'Auth Tokens'];
+  sectors.forEach((name, i) => {
+    const isCorrupt = faults.some(f => i < 3 && !f.fixed && f.faultType === 'corrupt_data');
+    const div = document.createElement('div');
+    const sectorCorrupt = i < faults.filter(f=>f.faultType==='corrupt_data').length && !faults[0]?.fixed;
+    const dataToolTarget = sectorCorrupt && STATE.activeTool === 'recover' ? 'tool-target-recover' :
+                           STATE.activeTool === 'scan' ? 'tool-target-scan' : '';
+    div.className = `data-sector ${sectorCorrupt ? 'corrupted' : ''} ${dataToolTarget}`;
+    div.innerHTML = `
+      <div class="sector-header">
+        <span class="sector-type">${name}</span>
+        <span class="sector-status ${isCorrupt ? 's-corrupt' : 's-ok'}">${isCorrupt ? 'CORRUPT' : 'OK'}</span>
+      </div>
+      <div class="sector-preview">${isCorrupt ? 'Data integrity check failed. Fragments recoverable.' : '0x' + Math.random().toString(16).substr(2, 8) + '... integrity verified'}</div>
+    `;
+    if (isCorrupt && STATE.activeTool === 'recover') {
+      div.onclick = () => {
+        const fault = faults.find(f => f.faultType === 'corrupt_data' && !f.fixed);
+        if (fault) openDataRecoveryPuzzle(fault);
+      };
+    }
+    container.appendChild(div);
+  });
+
+  // Hidden data
+  hiddenData.forEach(hd => {
+    const div = document.createElement('div');
+    div.className = `data-sector hidden-data`;
+    const hasChoice = STATE.hiddenDataChoices[hd.id];
+    div.innerHTML = `
+      <div class="sector-header">
+        <span class="sector-type" style="color:var(--purple)">&#9888; ANOMALOUS DATA</span>
+        <span class="sector-status s-hidden">${hd.category.toUpperCase()}</span>
+      </div>
+      <div class="sector-preview">${hd.preview}</div>
+      ${hasChoice ? `<div style="margin-top:8px;font-family:var(--mono);font-size:10px;color:var(--info)">Decision: ${hasChoice.toUpperCase()}</div>` : `
+      <div class="data-actions">
+        <button class="btn btn-sm" onclick="handleHiddenData('${hd.id}', 'ignore')">Ignore</button>
+        <button class="btn btn-sm btn-danger" onclick="handleHiddenData('${hd.id}', 'delete')">Delete</button>
+        <button class="btn btn-sm btn-purple" onclick="handleHiddenData('${hd.id}', 'clone')">Clone</button>
+        <button class="btn btn-sm" onclick="handleHiddenData('${hd.id}', 'quarantine')">Quarantine</button>
+      </div>`}
+    `;
+    container.appendChild(div);
+  });
+
+  if (STATE.activeTool === 'scan') {
+    container.onclick = (e) => {
+      if (e.target.closest('.data-sector.hidden-data')) return;
+      // Scan for hidden faults on data layer
+      faults.forEach(f => {
+        if (!f.discovered) {
+          f.discovered = true;
+          addLog(`Discovered: ${f.faultLabel} on ${f.componentName}`, 'action');
+          notify(`Fault discovered: ${f.faultLabel}`);
+        }
+      });
+      renderFaults();
+      renderDataLayer();
+    };
+  }
+}
+
+// ═══════════════════════════════════════
+// TOOLS
+// ═══════════════════════════════════════
+function activateTool(tool) {
+  STATE.activeTool = STATE.activeTool === tool ? null : tool;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+
+  // Update cursor on center panel
+  const center = document.querySelector('.panel-center');
+  center.classList.remove('tool-scan', 'tool-reconnect', 'tool-replace', 'tool-recover');
+
+  // Remove old tool overlay label
+  const oldLabel = center.querySelector('.tool-overlay-label');
+  if (oldLabel) oldLabel.remove();
+
+  if (STATE.activeTool) {
+    document.getElementById(`tool${tool.charAt(0).toUpperCase() + tool.slice(1)}`).classList.add('active');
+    center.classList.add(`tool-${STATE.activeTool}`);
+
+    // Add tool overlay label
+    const toolNames = { scan: 'SCANNER ACTIVE', reconnect: 'RECONNECT MODE', replace: 'REPLACE MODE', recover: 'DATA RECOVERY MODE' };
+    const toolHints = { scan: 'Click components to diagnose', reconnect: 'Click damaged nodes to repair', replace: 'Click destroyed modules to swap', recover: 'Click corrupted sectors to restore' };
+    const label = document.createElement('div');
+    label.className = `tool-overlay-label ${STATE.activeTool}`;
+    label.innerHTML = `${toolNames[STATE.activeTool]} <span style="opacity:0.6;font-size:9px">&mdash; ${toolHints[STATE.activeTool]}</span>`;
+    center.appendChild(label);
+
+    notify(`Tool: ${tool.toUpperCase()} — click on chip to use`);
+  }
+  renderLayers();
+}
+
+function scanComponent(mod) {
+  const faults = STATE.currentJob.chip.faults;
+  let found = false;
+  faults.forEach(f => {
+    if (f.componentId === mod.id && !f.discovered) {
+      if (f.discoverable || STATE.skills.diagnostics >= f.severity + 1) {
+        f.discovered = true;
+        found = true;
+        addLog(`SCAN: ${f.faultLabel} found on ${mod.name}`, 'action');
+        notify(`Fault discovered: ${f.faultLabel} — ${mod.name}`);
+      }
+    }
+  });
+  if (!found) {
+    const existingFault = faults.find(f => f.componentId === mod.id && f.discovered);
+    if (existingFault) {
+      addLog(`SCAN: ${mod.name} — known fault: ${existingFault.faultLabel}`, 'warn');
+    } else {
+      addLog(`SCAN: ${mod.name} — no faults detected`, 'action');
+    }
+  }
+  renderFaults();
+  renderLayers();
+}
+
+// ═══════════════════════════════════════
+// REPAIR: RECONNECT PUZZLE
+// ═══════════════════════════════════════
+function startRepair(fault) {
+  if (fault.fixed) return;
+  if (fault.repairAction === 'reconnect') openReconnectPuzzle(fault);
+  else if (fault.repairAction === 'replace') {
+    const mod = STATE.currentJob.chip.modules.find(m => m.id === fault.componentId);
+    if (mod) openReplaceModal(mod);
+  }
+  else if (fault.repairAction === 'recover') openDataRecoveryPuzzle(fault);
+}
+
+function openReconnectPuzzle(fault) {
+  const overlay = document.getElementById('puzzleOverlay');
+  const modal = document.getElementById('puzzleModal');
+
+  const GRID_SIZE = 7;
+  const grid = [];
+  for (let r = 0; r < GRID_SIZE; r++) {
+    grid[r] = [];
+    for (let c = 0; c < GRID_SIZE; c++) {
+      grid[r][c] = { type: 'empty', r, c };
+    }
+  }
+
+  // Place start and end nodes
+  const startR = Math.floor(Math.random() * 3);
+  const startC = 0;
+  const endR = GRID_SIZE - 1 - Math.floor(Math.random() * 3);
+  const endC = GRID_SIZE - 1;
+  grid[startR][startC] = { type: 'start', r: startR, c: startC };
+  grid[endR][endC] = { type: 'end', r: endR, c: endC };
+
+  // Place blockers (3-6)
+  const blockerCount = 3 + Math.floor(Math.random() * 4);
+  for (let i = 0; i < blockerCount; i++) {
+    let br, bc;
+    do {
+      br = Math.floor(Math.random() * GRID_SIZE);
+      bc = Math.floor(Math.random() * GRID_SIZE);
+    } while (grid[br][bc].type !== 'empty');
+    grid[br][bc] = { type: 'blocked', r: br, c: bc };
+  }
+
+  let path = [];
+  let selectedCell = null;
+
+  function renderPuzzleGrid() {
+    let html = `
+      <h2>RECONNECT: ${fault.componentName}</h2>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:12px">
+        Trace a path from <span style="color:var(--accent)">START</span> to <span style="color:var(--info)">END</span>. Click adjacent cells to build the route. Avoid blocked cells.
+      </p>
+      <div class="puzzle-grid" style="grid-template-columns:repeat(${GRID_SIZE},1fr)">
+    `;
+
+    for (let r = 0; r < GRID_SIZE; r++) {
+      for (let c = 0; c < GRID_SIZE; c++) {
+        const cell = grid[r][c];
+        const isPath = path.some(p => p.r === r && p.c === c);
+        const cls = cell.type === 'start' ? 'node-start' :
+                    cell.type === 'end' ? 'node-end' :
+                    cell.type === 'blocked' ? 'blocked' :
+                    isPath ? 'path' : '';
+        const label = cell.type === 'start' ? 'S' :
+                      cell.type === 'end' ? 'E' :
+                      cell.type === 'blocked' ? 'X' : '';
+        html += `<div class="puzzle-cell ${cls}" data-r="${r}" data-c="${c}">${label}</div>`;
+      }
+    }
+    html += `</div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn" onclick="clearPath()">Clear Path</button>
+        <button class="btn btn-primary" onclick="submitPath()" id="submitPathBtn">Submit</button>
+        <button class="btn btn-danger" onclick="closePuzzle()">Cancel</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-top:8px">
+        Path length: ${path.length} cells
+      </div>
+    `;
+    modal.innerHTML = html;
+
+    // Attach click handlers
+    modal.querySelectorAll('.puzzle-cell').forEach(cell => {
+      cell.onclick = () => {
+        const r = parseInt(cell.dataset.r);
+        const c = parseInt(cell.dataset.c);
+        handlePuzzleClick(r, c);
+      };
+    });
+  }
+
+  window.clearPath = () => { path = []; renderPuzzleGrid(); };
+  window.closePuzzle = () => { overlay.classList.remove('visible'); };
+
+  window.handlePuzzleClick = (r, c) => {
+    const cell = grid[r][c];
+    if (cell.type === 'blocked') return;
+
+    if (cell.type === 'start') {
+      path = [{ r, c }];
+    } else if (path.length > 0) {
+      const last = path[path.length - 1];
+      const dr = Math.abs(r - last.r);
+      const dc = Math.abs(c - last.c);
+      if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+        // Check if already in path (undo)
+        const existIdx = path.findIndex(p => p.r === r && p.c === c);
+        if (existIdx >= 0) {
+          path = path.slice(0, existIdx);
+        } else {
+          path.push({ r, c });
+        }
+      }
+    }
+    renderPuzzleGrid();
+  };
+
+  window.submitPath = () => {
+    if (path.length < 2) {
+      notify('Path too short — must connect START to END', 'warn');
+      return;
+    }
+    const last = path[path.length - 1];
+    if (grid[last.r][last.c].type !== 'end') {
+      notify('Path must end at the END node', 'warn');
+      return;
+    }
+
+    // Calculate quality based on path length (shorter = better)
+    const minPath = Math.abs(endR - startR) + Math.abs(endC - startC);
+    const ratio = minPath / path.length;
+    const quality = Math.min(1, 0.5 + ratio * 0.5);
+
+    fault.fixed = true;
+    STATE.repairLog.push({
+      type: 'reconnect',
+      targetId: fault.componentId,
+      qualityRating: quality,
+      timestamp: Date.now(),
+    });
+
+    // Fix module status
+    const mod = STATE.currentJob.chip.modules.find(m => m.id === fault.componentId);
+    if (mod) mod.status = 'ok';
+
+    addLog(`Reconnected ${fault.componentName} — quality: ${(quality * 100).toFixed(0)}%`, quality > 0.7 ? 'action' : 'warn');
+    notify(`Reconnection complete! Quality: ${(quality * 100).toFixed(0)}%`);
+
+    if (quality > 0.85 && STATE.skills.precision < 5) {
+      STATE.skills.precision = Math.min(5, STATE.skills.precision + 1);
+      addLog('Precision skill improved!', 'action');
+    }
+
+    overlay.classList.remove('visible');
+    renderAll();
+  };
+
+  overlay.classList.add('visible');
+  renderPuzzleGrid();
+}
+
+// ═══════════════════════════════════════
+// REPAIR: REPLACE MODULE
+// ═══════════════════════════════════════
+function openReplaceModal(mod) {
+  const overlay = document.getElementById('puzzleOverlay');
+  const modal = document.getElementById('puzzleModal');
+
+  const compatibleItems = STATE.inventory.filter(it => it.type === mod.type);
+  const allItems = STATE.inventory;
+  let selectedItem = null;
+
+  function renderReplaceModal() {
+    let html = `
+      <h2 class="danger">REPLACE: ${mod.name}</h2>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:4px">
+        Original: <b style="color:var(--text)">${mod.name}</b> T${mod.tier} [${mod.manufacturer}]
+      </p>
+      <p style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:12px">
+        Select a replacement from inventory. Exact type match recommended.
+      </p>
+      <div class="inv-list">
+    `;
+
+    if (allItems.length === 0) {
+      html += `<div style="padding:20px;text-align:center;color:var(--text-dim);font-family:var(--mono);font-size:12px">No parts in inventory</div>`;
+    }
+
+    allItems.forEach(it => {
+      const isExactType = it.type === mod.type;
+      const isMfrMatch = it.manufacturer === mod.manufacturer;
+      const selected = selectedItem && selectedItem.id === it.id;
+      html += `
+        <div class="inv-item ${selected ? 'selected' : ''}" data-inv-id="${it.id}">
+          <span class="inv-icon">${it.icon}</span>
+          <div style="flex:1">
+            <div class="inv-name">${it.name} ${isExactType ? '<span style="color:var(--accent);font-size:9px">MATCH</span>' : ''}</div>
+            <div class="inv-mfr">${it.manufacturer} ${isMfrMatch ? '&#10003; MFR match' : ''}</div>
+          </div>
+          <span class="inv-tier">T${it.tier}</span>
+          <span class="inv-price">${it.cost}cr</span>
+        </div>
+      `;
+    });
+
+    html += `</div>`;
+
+    if (selectedItem) {
+      const tierDelta = selectedItem.tier - mod.tier;
+      const mfrMatch = selectedItem.manufacturer === mod.manufacturer;
+      const typeMatch = selectedItem.type === mod.type;
+      let score = 0.7 + tierDelta * 0.1 + (mfrMatch ? 0.1 : 0) + (typeMatch ? 0 : -0.2);
+      score = Math.max(0, Math.min(1, score));
+
+      const compatClass = score >= 0.8 ? 'good' : score >= 0.5 ? 'warn' : 'bad';
+      html += `
+        <div class="inv-compat ${compatClass}">
+          Compatibility: ${(score * 100).toFixed(0)}%
+          ${tierDelta > 0 ? ' | Upgrade (+quality)' : tierDelta < 0 ? ' | Downgrade (-quality, risk comeback)' : ''}
+          ${!mfrMatch ? ' | MFR mismatch (glitch risk)' : ''}
+          ${!typeMatch ? ' | TYPE mismatch (-20% quality)' : ''}
+        </div>
+      `;
+    }
+
+    html += `
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" onclick="confirmReplace()" ${!selectedItem ? 'disabled style="opacity:0.3"' : ''}>Install — ${selectedItem ? selectedItem.cost + 'cr' : '---'}</button>
+        <button class="btn btn-danger" onclick="closePuzzle()">Cancel</button>
+      </div>
+    `;
+
+    modal.innerHTML = html;
+
+    // Click handlers
+    modal.querySelectorAll('.inv-item').forEach(el => {
+      el.onclick = () => {
+        const id = el.dataset.invId;
+        selectedItem = STATE.inventory.find(i => i.id === id);
+        renderReplaceModal();
+      };
+    });
+  }
+
+  window.confirmReplace = () => {
+    if (!selectedItem) return;
+    if (STATE.credits < selectedItem.cost) {
+      notify('Not enough credits!', 'danger');
+      return;
+    }
+
+    const tierDelta = selectedItem.tier - mod.tier;
+    const mfrMatch = selectedItem.manufacturer === mod.manufacturer;
+    const typeMatch = selectedItem.type === mod.type;
+    let quality = 0.7 + tierDelta * 0.1 + (mfrMatch ? 0.1 : 0) + (typeMatch ? 0 : -0.2);
+    quality = Math.max(0, Math.min(1, quality));
+
+    STATE.credits -= selectedItem.cost;
+    STATE.inventory = STATE.inventory.filter(i => i.id !== selectedItem.id);
+
+    mod.status = 'replaced';
+    mod.tier = selectedItem.tier;
+    mod.manufacturer = selectedItem.manufacturer;
+
+    const fault = STATE.currentJob.chip.faults.find(f => f.componentId === mod.id && f.faultType === 'destroyed_module');
+    if (fault) {
+      fault.fixed = true;
+    }
+
+    STATE.repairLog.push({
+      type: 'replace',
+      targetId: mod.id,
+      qualityRating: quality,
+      partUsed: selectedItem.name,
+      timestamp: Date.now(),
+    });
+
+    addLog(`Replaced ${mod.name} with T${selectedItem.tier} ${selectedItem.manufacturer} — quality: ${(quality * 100).toFixed(0)}%`, quality > 0.7 ? 'action' : 'warn');
+    notify(`Module replaced! Quality: ${(quality * 100).toFixed(0)}%`);
+
+    overlay.classList.remove('visible');
+    renderAll();
+  };
+
+  overlay.classList.add('visible');
+  renderReplaceModal();
+}
+
+// ═══════════════════════════════════════
+// REPAIR: DATA RECOVERY PUZZLE
+// ═══════════════════════════════════════
+function openDataRecoveryPuzzle(fault) {
+  const overlay = document.getElementById('puzzleOverlay');
+  const modal = document.getElementById('puzzleModal');
+
+  // Generate scrambled text fragments
+  const sentences = [
+    'NEURAL PATHWAY INTEGRITY VERIFIED',
+    'SENSORY CACHE SYNCHRONIZATION ACTIVE',
+    'MEMORY ALLOCATION TABLE RESTORED',
+    'AUTHENTICATION TOKEN REFRESHED',
+  ];
+  const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+  const words = sentence.split(' ');
+  const scrambled = [...words].sort(() => Math.random() - 0.5);
+
+  let slots = words.map(() => null);
+  let selectedFragIdx = null;
+
+  function renderRecovery() {
+    const recovered = slots.filter(s => s !== null).length;
+    const total = words.length;
+    const pct = Math.round((recovered / total) * 100);
+
+    let html = `
+      <h2 class="purple">DATA RECOVERY: ${fault.componentName}</h2>
+      <p style="font-family:var(--mono);font-size:11px;color:var(--text-dim);margin-bottom:12px">
+        Reassemble the corrupted data sequence. Select a fragment, then click a slot to place it. Recovery: ${pct}%
+      </p>
+      <div class="progress-bar" style="margin-bottom:16px"><div class="fill" style="width:${pct}%"></div></div>
+
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin-bottom:6px">TARGET SEQUENCE:</div>
+      <div class="recovery-slots">
+    `;
+
+    slots.forEach((s, i) => {
+      const correct = s !== null && s === words[i];
+      html += `<div class="recovery-slot ${s !== null ? (correct ? 'correct' : 'filled') : ''}" data-slot="${i}">${s || (i + 1)}</div>`;
+    });
+
+    html += `</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text-dim);margin:12px 0 6px">FRAGMENTS:</div>
+      <div class="fragment-grid">
+    `;
+
+    scrambled.forEach((word, i) => {
+      const placed = slots.includes(word);
+      const selected = selectedFragIdx === i;
+      html += `<div class="fragment ${placed ? 'placed' : ''} ${selected ? 'selected' : ''}" data-frag="${i}" ${placed ? 'style="opacity:0.3"' : ''}>${word}</div>`;
+    });
+
+    html += `</div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn" onclick="clearRecovery()">Reset</button>
+        <button class="btn btn-primary" onclick="submitRecovery()">Accept Recovery (${pct}%)</button>
+        <button class="btn btn-danger" onclick="closePuzzle()">Cancel</button>
+      </div>
+    `;
+
+    modal.innerHTML = html;
+
+    // Fragment click
+    modal.querySelectorAll('.fragment:not(.placed)').forEach(el => {
+      el.onclick = () => {
+        selectedFragIdx = parseInt(el.dataset.frag);
+        renderRecovery();
+      };
+    });
+
+    // Slot click
+    modal.querySelectorAll('.recovery-slot').forEach(el => {
+      el.onclick = () => {
+        const slotIdx = parseInt(el.dataset.slot);
+        if (selectedFragIdx !== null && !slots.includes(scrambled[selectedFragIdx])) {
+          // Remove from previous slot if any
+          slots = slots.map(s => s === scrambled[selectedFragIdx] ? null : s);
+          slots[slotIdx] = scrambled[selectedFragIdx];
+          selectedFragIdx = null;
+          renderRecovery();
+        } else if (slots[slotIdx] !== null) {
+          // Click filled slot to remove
+          slots[slotIdx] = null;
+          renderRecovery();
+        }
+      };
+    });
+  }
+
+  window.clearRecovery = () => {
+    slots = words.map(() => null);
+    selectedFragIdx = null;
+    renderRecovery();
+  };
+
+  window.submitRecovery = () => {
+    const correctCount = slots.filter((s, i) => s === words[i]).length;
+    const quality = correctCount / words.length;
+
+    fault.fixed = true;
+    const mod = STATE.currentJob.chip.modules.find(m => m.id === fault.componentId);
+    if (mod) mod.status = quality > 0.5 ? 'ok' : 'corrupted';
+
+    STATE.repairLog.push({
+      type: 'recover_data',
+      targetId: fault.componentId,
+      qualityRating: quality,
+      timestamp: Date.now(),
+    });
+
+    addLog(`Data recovered on ${fault.componentName} — ${(quality * 100).toFixed(0)}% accuracy`, quality > 0.7 ? 'action' : 'warn');
+    notify(`Recovery complete: ${(quality * 100).toFixed(0)}%`);
+
+    if (quality > 0.8 && STATE.skills.dataRecovery < 5) {
+      STATE.skills.dataRecovery = Math.min(5, STATE.skills.dataRecovery + 1);
+      addLog('Data Recovery skill improved!', 'action');
+    }
+
+    overlay.classList.remove('visible');
+    renderAll();
+  };
+
+  overlay.classList.add('visible');
+  renderRecovery();
+}
+
+// ═══════════════════════════════════════
+// HIDDEN DATA CHOICES
+// ═══════════════════════════════════════
+function handleHiddenData(hdId, action) {
+  STATE.hiddenDataChoices[hdId] = action;
+  const hd = STATE.currentJob.chip.hiddenData.find(h => h.id === hdId);
+
+  if (action === 'clone') {
+    addLog(`CLONED hidden data: ${hd.category} — HIGH RISK`, 'danger');
+    notify('Data cloned to personal storage. Be careful.', 'warn');
+  } else if (action === 'delete') {
+    addLog(`DELETED hidden data: ${hd.category}`, 'warn');
+    notify('Hidden data permanently deleted.');
+  } else if (action === 'quarantine') {
+    addLog(`Quarantined hidden data: ${hd.category}`, 'action');
+    notify('Data encrypted and quarantined.');
+  } else {
+    addLog(`Ignored hidden data: ${hd.category}`, 'action');
+  }
+
+  renderDataLayer();
+  checkDeliverReady();
+}
+
+// ═══════════════════════════════════════
+// DELIVERY
+// ═══════════════════════════════════════
+function checkDeliverReady() {
+  const faults = STATE.currentJob.chip.faults;
+  const anyFixed = STATE.repairLog.length > 0;
+  document.getElementById('deliverBtn').style.display = anyFixed ? 'block' : 'none';
+}
+
+function deliverJob() {
+  const job = STATE.currentJob;
+  const faults = job.chip.faults;
+  const totalFaults = faults.length;
+  const fixedFaults = faults.filter(f => f.fixed).length;
+  const unfixedUndiscovered = faults.filter(f => !f.fixed && !f.discovered).length;
+
+  const avgQuality = STATE.repairLog.length > 0
+    ? STATE.repairLog.reduce((s, a) => s + a.qualityRating, 0) / STATE.repairLog.length
+    : 0;
+
+  const coverageScore = fixedFaults / totalFaults;
+  const qualityScore = (coverageScore * 0.6) + (avgQuality * 0.4);
+
+  // Hidden data suspicion
+  const cloned = Object.values(STATE.hiddenDataChoices).includes('clone');
+  const deleted = Object.values(STATE.hiddenDataChoices).includes('delete');
+  const suspicious = cloned || deleted;
+
+  // Client reaction
+  let reaction, reactionText;
+  if (qualityScore >= 0.85 && !suspicious) {
+    reaction = 'satisfied';
+    reactionText = '"Excellent work. Exactly what I needed. I\'ll send more people your way."';
+  } else if (qualityScore >= 0.85 && suspicious) {
+    reaction = 'suspicious';
+    reactionText = '"The repair is good, but... you saw something in there, didn\'t you? We\'ll be in touch."';
+  } else if (qualityScore < 0.5) {
+    reaction = 'angry';
+    reactionText = '"This is sloppy work. Half the problems aren\'t even fixed. I want a partial refund."';
+  } else {
+    reaction = 'satisfied';
+    reactionText = '"Decent job. Not perfect, but it\'ll do. Here\'s your payment."';
+  }
+
+  // Payment
+  let payment = job.agreedPrice;
+  const tip = reaction === 'satisfied' && qualityScore > 0.9 ? Math.round(payment * 0.15) : 0;
+  const dispute = reaction === 'angry' ? Math.round(payment * 0.3) : 0;
+  payment = payment + tip - dispute;
+
+  const repDelta = reaction === 'satisfied' ? (qualityScore > 0.9 ? 5 : 3) :
+                   reaction === 'suspicious' ? -2 :
+                   reaction === 'angry' ? -5 : 0;
+
+  STATE.credits += payment;
+  STATE.reputation = Math.max(0, Math.min(100, STATE.reputation + repDelta));
+
+  // Consequence flags
+  const consequences = [];
+  if (cloned) consequences.push('Data cloned — someone may come looking');
+  if (unfixedUndiscovered > 0) consequences.push(`${unfixedUndiscovered} undetected fault(s) may cause comeback`);
+  if (reaction === 'angry') consequences.push('Client may demand refund later');
+  if (qualityScore < 0.6) consequences.push('Reputation damage — fewer clients next cycle');
+
+  // Render delivery screen
+  const overlay = document.getElementById('deliveryOverlay');
+  const modal = document.getElementById('deliveryModal');
+
+  const scoreClass = qualityScore >= 0.8 ? '' : qualityScore >= 0.5 ? 'ok' : 'bad';
+
+  modal.innerHTML = `
+    <div class="score-card">
+      <div class="score-label">job complete</div>
+      <div class="score-big ${scoreClass}">${(qualityScore * 100).toFixed(0)}%</div>
+      <div class="score-label">quality score</div>
+
+      <div class="client-reaction ${reaction}">
+        ${reactionText}
+        <div style="font-size:11px;margin-top:6px;opacity:0.7">— ${job.client.name}</div>
+      </div>
+
+      <div class="score-breakdown">
+        <div class="score-row">
+          <span>Faults fixed</span>
+          <span class="sr-val">${fixedFaults}/${totalFaults}</span>
+        </div>
+        <div class="score-row">
+          <span>Avg repair quality</span>
+          <span class="sr-val">${(avgQuality * 100).toFixed(0)}%</span>
+        </div>
+        <div class="score-row">
+          <span>Base payment</span>
+          <span class="sr-val positive">+${job.agreedPrice}cr</span>
+        </div>
+        ${tip > 0 ? `<div class="score-row"><span>Tip (quality bonus)</span><span class="sr-val positive">+${tip}cr</span></div>` : ''}
+        ${dispute > 0 ? `<div class="score-row"><span>Dispute penalty</span><span class="sr-val negative">-${dispute}cr</span></div>` : ''}
+        <div class="score-row" style="border-bottom:2px solid var(--border)">
+          <span><b>Total payment</b></span>
+          <span class="sr-val positive" style="font-size:14px">${payment}cr</span>
+        </div>
+        <div class="score-row">
+          <span>Reputation change</span>
+          <span class="sr-val ${repDelta >= 0 ? 'positive' : 'negative'}">${repDelta >= 0 ? '+' : ''}${repDelta}</span>
+        </div>
+      </div>
+
+      ${consequences.length > 0 ? `
+        <div style="text-align:left;margin-top:12px">
+          <div class="panel-heading" style="color:var(--warn)">consequence flags</div>
+          ${consequences.map(c => `<div style="font-family:var(--mono);font-size:10px;color:var(--warn);padding:4px 0">&#9888; ${c}</div>`).join('')}
+        </div>
+      ` : ''}
+
+      <button class="btn btn-primary" style="margin-top:20px;width:100%" onclick="nextJob()">NEXT JOB</button>
+    </div>
+  `;
+
+  overlay.classList.add('visible');
+}
+
+function nextJob() {
+  document.getElementById('deliveryOverlay').classList.remove('visible');
+  currentJobData = generateJob();
+  STATE.inventory = [...STATE.inventory, ...generateInventory().slice(0, 3)]; // Restock a few items
+  document.getElementById('intro').classList.remove('hidden');
+  renderIntro();
+  document.getElementById('deliverBtn').style.display = 'none';
+}
+
+// ═══════════════════════════════════════
+// LOG & NOTIFICATIONS
+// ═══════════════════════════════════════
+function addLog(text, type = 'action') {
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  STATE.repairLog.push({ text, type, time });
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('repairLog');
+  const logEntries = STATE.repairLog.filter(l => l.text); // Only display entries
+  el.innerHTML = logEntries.slice(-15).map(l =>
+    `<div class="log-entry"><span class="log-time">${l.time || ''}</span> <span class="log-${l.type || 'action'}">${l.text || ''}</span></div>`
+  ).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function notify(msg, type = '') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = `notif visible ${type}`;
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => el.classList.remove('visible'), 2500);
+}
+
+// ═══════════════════════════════════════
+// TIMER
+// ═══════════════════════════════════════
+function startTimer() {
+  const timerEl = document.getElementById('jobTimer');
+  setInterval(() => {
+    if (!STATE.jobStartTime) return;
+    const elapsed = Math.floor((Date.now() - STATE.jobStartTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, '0');
+    const s = (elapsed % 60).toString().padStart(2, '0');
+    timerEl.textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ═══════════════════════════════════════
+document.addEventListener('keydown', (e) => {
+  if (e.key === '1') activateTool('scan');
+  if (e.key === '2') activateTool('reconnect');
+  if (e.key === '3') activateTool('replace');
+  if (e.key === '4') activateTool('recover');
+  if (e.key === 'Escape') {
+    document.getElementById('puzzleOverlay').classList.remove('visible');
+    document.getElementById('deliveryOverlay').classList.remove('visible');
+  }
+});
+
+// ═══════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════
+initIntro();
+</script>
+</body>
+</html>
