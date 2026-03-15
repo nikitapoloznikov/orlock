@@ -58,7 +58,7 @@ header h1{
   padding:6px 48px 6px 10px;
   background:var(--surface);
   border:none;
-  border-radius:6px;
+  border-radius:8px;
   font-family:inherit;
   font-size:12px;
   color:var(--text);
@@ -77,6 +77,10 @@ header h1{
   pointer-events:none;
   display:flex;
   gap:2px;
+  transition:opacity 0.15s;
+}
+.search-field:focus ~ .search-shortcut{
+  opacity:0;
 }
 .search-shortcut kbd{
   background:var(--border);
