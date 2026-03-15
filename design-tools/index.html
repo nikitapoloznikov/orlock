@@ -50,19 +50,20 @@ header h1{
 }
 .search-field{
   width:160px;
-  padding:6px 10px;
-  background:var(--surface);
-  border:1px solid var(--border);
-  border-radius:6px;
+  padding:6px 0;
+  background:transparent;
+  border:none;
+  border-bottom:1px solid var(--border);
+  border-radius:0;
   font-family:inherit;
   font-size:12px;
   color:var(--text);
   outline:none;
-  transition:border-color 0.2s,width 0.3s;
+  transition:width 0.3s,border-color 0.2s;
 }
 .search-field:focus{
-  border-color:#444;
   width:220px;
+  border-color:#555;
 }
 .search-field::placeholder{color:var(--text3)}
 
@@ -152,7 +153,7 @@ footer{
 
 <div class="container">
   <header>
-    <h1>Design Engineer Tools</h1>
+    <h1>Design Engineer Tools.</h1>
     <input type="text" class="search-field" id="searchField" placeholder="Search..." oninput="onSearch(this.value)">
   </header>
   <main id="main"></main>
@@ -342,6 +343,13 @@ function render() {
 }
 
 render();
+
+document.addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+    e.preventDefault();
+    document.getElementById('searchField').focus();
+  }
+});
 
 function onSearch(q) {
   q = q.toLowerCase().trim();
