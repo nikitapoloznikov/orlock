@@ -48,24 +48,44 @@ header h1{
   color:var(--text);
   white-space:nowrap;
 }
+.search-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
 .search-field{
   width:160px;
-  padding:6px 0;
-  background:transparent;
+  padding:6px 48px 6px 10px;
+  background:var(--surface);
   border:none;
-  border-bottom:1px solid var(--border);
-  border-radius:0;
+  border-radius:6px;
   font-family:inherit;
   font-size:12px;
   color:var(--text);
   outline:none;
-  transition:width 0.3s,border-color 0.2s;
+  transition:width 0.3s;
 }
 .search-field:focus{
   width:220px;
-  border-color:#555;
 }
 .search-field::placeholder{color:var(--text3)}
+.search-shortcut{
+  position:absolute;
+  right:8px;
+  font-size:10px;
+  color:var(--text3);
+  pointer-events:none;
+  display:flex;
+  gap:2px;
+}
+.search-shortcut kbd{
+  background:var(--border);
+  padding:1px 5px;
+  border-radius:3px;
+  font-family:inherit;
+  font-size:9px;
+  color:var(--text2);
+}
 
 /* Dimmed state for non-matching tools */
 .tool-card{
@@ -154,7 +174,10 @@ footer{
 <div class="container">
   <header>
     <h1>Design Engineer Tools.</h1>
-    <input type="text" class="search-field" id="searchField" placeholder="Search..." oninput="onSearch(this.value)">
+    <div class="search-wrap">
+      <input type="text" class="search-field" id="searchField" placeholder="Search..." oninput="onSearch(this.value)">
+      <div class="search-shortcut"><kbd>&#8984;</kbd><kbd>F</kbd></div>
+    </div>
   </header>
   <main id="main"></main>
   <footer>&copy;2026 by Orlock</footer>
