@@ -37,18 +37,46 @@ body{
 /* Header */
 header{
   padding:28px 0 20px;
+  display:flex;
+  align-items:center;
+  gap:16px;
 }
 header h1{
   font-size:16px;
   font-weight:700;
   letter-spacing:-0.01em;
-  margin-bottom:2px;
   color:var(--text);
+  white-space:nowrap;
 }
-header p{
+.search-field{
+  width:160px;
+  padding:6px 10px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:6px;
+  font-family:inherit;
   font-size:12px;
-  color:var(--text3);
-  line-height:1.4;
+  color:var(--text);
+  outline:none;
+  transition:border-color 0.2s,width 0.3s;
+}
+.search-field:focus{
+  border-color:#444;
+  width:220px;
+}
+.search-field::placeholder{color:var(--text3)}
+
+/* Dimmed state for non-matching tools */
+.tool-card{
+  transition:opacity 0.25s ease;
+}
+.tool-card.dimmed{
+  opacity:0.12;
+  pointer-events:none;
+}
+.category.all-dimmed .category-title{
+  opacity:0.12;
+  transition:opacity 0.25s ease;
 }
 
 /* Category row */
@@ -125,6 +153,7 @@ footer{
 <div class="container">
   <header>
     <h1>Design Engineer Tools</h1>
+    <input type="text" class="search-field" id="searchField" placeholder="Search..." oninput="onSearch(this.value)">
   </header>
   <main id="main"></main>
   <footer>&copy;2026 by Orlock</footer>
@@ -313,6 +342,21 @@ function render() {
 }
 
 render();
+
+function onSearch(q) {
+  q = q.toLowerCase().trim();
+  document.querySelectorAll('.category').forEach(cat => {
+    const cards = cat.querySelectorAll('.tool-card');
+    let anyVisible = false;
+    cards.forEach(card => {
+      const name = card.querySelector('.tool-name').textContent.toLowerCase();
+      const match = !q || name.includes(q);
+      card.classList.toggle('dimmed', !match);
+      if (match) anyVisible = true;
+    });
+    cat.classList.toggle('all-dimmed', !anyVisible && !!q);
+  });
+}
 </script>
 </body>
 </html>
