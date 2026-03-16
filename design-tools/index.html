@@ -400,9 +400,19 @@ const TOOLS = [
   ]},
 ];
 
+// Some sites block Google's favicon service — use direct favicon URLs
+const DIRECT_FAVICONS = {
+  'aider.chat': 'https://aider.chat/assets/favicon.ico',
+  'bitspace.sh': 'https://bitspace.sh/favicon.ico',
+  'www.shadertoy.com': 'https://www.shadertoy.com/favicon.ico',
+  'viewer.needle.tools': 'https://viewer.needle.tools/favicon.ico',
+  'jakearchibald.github.io': 'https://jakearchibald.github.io/svgomg/favicon.ico',
+};
+
 function getFaviconUrl(url) {
   try {
     const u = new URL(url);
+    if (DIRECT_FAVICONS[u.hostname]) return DIRECT_FAVICONS[u.hostname];
     return `https://www.google.com/s2/favicons?domain=${u.hostname}&sz=64`;
   } catch { return ''; }
 }
