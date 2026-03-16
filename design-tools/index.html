@@ -533,15 +533,27 @@ function render() {
 render();
 
 document.addEventListener('keydown', e => {
+  const sf = document.getElementById('searchField');
   if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
     e.preventDefault();
-    document.getElementById('searchField').focus();
+    if (document.activeElement === sf) {
+      sf.value = '';
+      onSearch('');
+      sf.blur();
+    } else {
+      sf.focus();
+    }
+    return;
   }
   if (e.key === 'Escape') {
-    const sf = document.getElementById('searchField');
-    if (document.activeElement === sf) {
-      sf.blur();
-    }
+    sf.value = '';
+    onSearch('');
+    sf.blur();
+    return;
+  }
+  // Auto-focus search on any printable key
+  if (e.key.length === 1 && !e.metaKey && !e.ctrlKey && !e.altKey && document.activeElement !== sf) {
+    sf.focus();
   }
 });
 
@@ -622,11 +634,13 @@ if (window.matchMedia('(min-width:641px)').matches) {
 function onSearch(q) {
   q = q.toLowerCase().trim();
   document.querySelectorAll('.category').forEach(cat => {
+    const catName = cat.querySelector('.category-title').textContent.toLowerCase();
+    const catMatch = q && catName.includes(q);
     const cards = cat.querySelectorAll('.tool-card');
     let anyVisible = false;
     cards.forEach(card => {
       const name = card.querySelector('.tool-name').textContent.toLowerCase();
-      const match = !q || name.includes(q);
+      const match = !q || name.includes(q) || catMatch;
       card.classList.toggle('dimmed', !match);
       if (match) anyVisible = true;
     });
