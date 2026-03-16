@@ -38,18 +38,6 @@ html[data-theme="light"]{
   --hover-text:#000;
   color-scheme:light;
 }
-@media(prefers-color-scheme:light){
-  html:not([data-theme="dark"]){
-    --bg:#f5f5f3;
-    --surface:#e8e8e5;
-    --border:#ddd;
-    --text:#111;
-    --text2:#555;
-    --text3:#999;
-    --hover-text:#000;
-    color-scheme:light;
-  }
-}
 
 body{
   font-family:'Inter',system-ui,sans-serif;
@@ -85,6 +73,7 @@ header h1{
   position:relative;
   display:flex;
   align-items:center;
+  margin-left:auto;
 }
 .search-field{
   width:160px;
@@ -189,14 +178,6 @@ html[data-theme="light"] .tool-favicon.invert-dark{
 html[data-theme="light"] .tool-favicon.invert-light{
   filter:invert(1) brightness(0.5);
 }
-@media(prefers-color-scheme:light){
-  html:not([data-theme="dark"]) .tool-favicon.invert-dark{
-    filter:none;
-  }
-  html:not([data-theme="dark"]) .tool-favicon.invert-light{
-    filter:invert(1) brightness(0.5);
-  }
-}
 
 .tool-name{
   font-size:13px;
@@ -206,7 +187,6 @@ html[data-theme="light"] .tool-favicon.invert-light{
 
 /* Theme toggle */
 .theme-toggle{
-  margin-left:auto;
   display:flex;
   align-items:center;
   gap:2px;
@@ -270,8 +250,7 @@ footer{
       <div class="search-shortcut"><kbd>&#8984;</kbd><kbd>F</kbd></div>
     </div>
     <div class="theme-toggle">
-      <button class="theme-btn active" data-theme="system" onclick="setTheme('system')">System</button>
-      <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')">Dark</button>
+      <button class="theme-btn active" data-theme="dark" onclick="setTheme('dark')">Dark</button>
       <button class="theme-btn" data-theme="light" onclick="setTheme('light')">Light</button>
     </div>
   </header>
@@ -496,22 +475,18 @@ document.addEventListener('keydown', e => {
 // Theme
 function setTheme(mode) {
   document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === mode));
-  if (mode === 'system') {
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme', mode);
-  }
+  document.documentElement.setAttribute('data-theme', mode);
   localStorage.setItem('theme', mode);
 }
 (function() {
-  const saved = localStorage.getItem('theme') || 'system';
+  const saved = localStorage.getItem('theme') || 'dark';
   setTheme(saved);
 })();
 
 // Section focus on hover (title or tool only)
 const mainEl = document.getElementById('main');
 mainEl.addEventListener('mouseover', e => {
-  const target = e.target.closest('.category-title, .tool-card');
+  const target = e.target.closest('.tool-card');
   if (!target) return;
   const cat = target.closest('.category');
   if (!cat) return;
@@ -524,7 +499,7 @@ mainEl.addEventListener('mouseleave', () => {
 });
 // Also clear when moving to gaps between sections
 mainEl.addEventListener('mouseout', e => {
-  if (!e.relatedTarget || !e.relatedTarget.closest('.category-title, .tool-card')) {
+  if (!e.relatedTarget || !e.relatedTarget.closest('.tool-card')) {
     if (!e.relatedTarget || !e.relatedTarget.closest('.category')) {
       mainEl.classList.remove('has-hover');
       mainEl.querySelectorAll('.category.hovered').forEach(c => c.classList.remove('hovered'));
