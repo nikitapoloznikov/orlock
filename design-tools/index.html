@@ -176,10 +176,7 @@ html[data-theme="light"] .tool-favicon.invert-dark{
   filter:none;
 }
 html[data-theme="light"] .tool-favicon.invert-light{
-  background:#1a1a1a;
-  border-radius:4px;
-  padding:1px;
-  box-sizing:content-box;
+  filter:none;
 }
 
 .tool-name{
@@ -434,15 +431,7 @@ const DARK_FAVICONS = new Set([
 ]);
 
 // Favicons that are truly white/light — need inverting in light mode only
-const LIGHT_FAVICONS = new Set([
-  'rive.app','nodes.io',
-  'cavalry.scenegroup.co',
-  'recordly.dev',
-  'ray.so',
-  'parsec.app','www.warp.dev',
-  'www.cursor.com','searchsystem.co','layers.to',
-  'www.theatrejs.com',
-]);
+const LIGHT_FAVICONS = new Set([]);
 
 function render() {
   TOOLS.forEach(s => s.tools.sort((a,b) => a.name.localeCompare(b.name, undefined, {sensitivity:'base'})));
