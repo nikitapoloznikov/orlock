@@ -242,15 +242,14 @@ footer{
 
 /* Section hover dimming (desktop only) */
 @media(min-width:641px){
-  main:hover .category{
-    opacity:0.15;
-    transition:opacity 0.3s ease;
-  }
-  main:hover .category:hover{
-    opacity:1;
-  }
   main .category{
     transition:opacity 0.3s ease;
+  }
+  main.has-hover .category{
+    opacity:0.15;
+  }
+  main.has-hover .category.hovered{
+    opacity:1;
   }
 }
 
@@ -508,6 +507,30 @@ function setTheme(mode) {
   const saved = localStorage.getItem('theme') || 'system';
   setTheme(saved);
 })();
+
+// Section focus on hover (title or tool only)
+const mainEl = document.getElementById('main');
+mainEl.addEventListener('mouseover', e => {
+  const target = e.target.closest('.category-title, .tool-card');
+  if (!target) return;
+  const cat = target.closest('.category');
+  if (!cat) return;
+  mainEl.classList.add('has-hover');
+  mainEl.querySelectorAll('.category').forEach(c => c.classList.toggle('hovered', c === cat));
+});
+mainEl.addEventListener('mouseleave', () => {
+  mainEl.classList.remove('has-hover');
+  mainEl.querySelectorAll('.category.hovered').forEach(c => c.classList.remove('hovered'));
+});
+// Also clear when moving to gaps between sections
+mainEl.addEventListener('mouseout', e => {
+  if (!e.relatedTarget || !e.relatedTarget.closest('.category-title, .tool-card')) {
+    if (!e.relatedTarget || !e.relatedTarget.closest('.category')) {
+      mainEl.classList.remove('has-hover');
+      mainEl.querySelectorAll('.category.hovered').forEach(c => c.classList.remove('hovered'));
+    }
+  }
+});
 
 function onSearch(q) {
   q = q.toLowerCase().trim();
