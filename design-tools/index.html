@@ -175,9 +175,6 @@ header h1{
 html[data-theme="light"] .tool-favicon.invert-dark{
   filter:none;
 }
-html[data-theme="light"] .tool-favicon.invert-light{
-  filter:none;
-}
 
 .tool-name{
   font-size:13px;
@@ -431,7 +428,6 @@ const DARK_FAVICONS = new Set([
 ]);
 
 // Favicons that are truly white/light — need inverting in light mode only
-const LIGHT_FAVICONS = new Set([]);
 
 function render() {
   TOOLS.forEach(s => s.tools.sort((a,b) => a.name.localeCompare(b.name, undefined, {sensitivity:'base'})));
@@ -443,7 +439,7 @@ function render() {
         ${section.tools.map(t => {
           let host = '';
           try { host = new URL(t.url).hostname; } catch {}
-          const cls = DARK_FAVICONS.has(host) ? ' invert-dark' : LIGHT_FAVICONS.has(host) ? ' invert-light' : '';
+          const cls = DARK_FAVICONS.has(host) ? ' invert-dark' : '';
           return `<a class="tool-card" href="${t.url}" target="_blank" rel="noopener">
             <img class="tool-favicon${cls}" src="${getFaviconUrl(t.url)}" alt="" loading="lazy" onerror="this.style.display='none'">
             <span class="tool-name">${t.name}</span>
