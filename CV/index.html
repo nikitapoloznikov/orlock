@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nikita Poloznikov — Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:'Inter',system-ui,sans-serif;
+  background:#0a0a0c;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+.canvas{
+  position:relative;
+  width:100vw;
+  height:6000px;
+}
+.p{
+  position:absolute;
+  overflow:hidden;
+  transition:transform 0.35s cubic-bezier(0.23,1,0.32,1),box-shadow 0.35s ease,z-index 0s;
+}
+.p:hover{
+  transform:scale(1.04) !important;
+  box-shadow:0 40px 100px rgba(0,0,0,0.8);
+  z-index:999 !important;
+}
+.p img{display:block;width:100%;height:100%;object-fit:cover}
+header{
+  position:fixed;top:28px;left:24px;z-index:100;
+  mix-blend-mode:difference;
+}
+header h1{
+  font-size:16px;font-weight:700;letter-spacing:-0.01em;color:#fff;white-space:nowrap;
+}
+.contact{
+  position:fixed;top:28px;right:32px;z-index:100;
+  display:flex;gap:20px;mix-blend-mode:difference;
+}
+.contact a{
+  font-size:12px;font-weight:500;color:rgba(255,255,255,0.5);
+  text-decoration:none;transition:color 0.2s;
+}
+.contact a:hover{color:#fff}
+</style>
+</head>
+<body>
+<div class="canvas" id="c"></div>
+<header><h1>Nikita Poloznikov.</h1></header>
+<div class="contact">
+  <a href="mailto:nikita@jazari.money">Email</a>
+  <a href="https://github.com/nikitapoloznikov" target="_blank">GitHub</a>
+</div>
+<script>
+// Each piece: [src, x, y, w, h, rot, z]
+// Placed to mimic the Figma canvas feel:
+// - Dense cluster top-center (phone screens, app mockups)
+// - Big browser screenshot cluster center-left
+// - Dense color grid top-right
+// - Scattered items mid and bottom
+// - Overlapping, organic, messy
+const D = [
+  // === TOP-RIGHT dense cluster (like the color grid in Figma) ===
+  ["img/render_13.png",   1050, 30,  340, 220, 0,   20],
+  ["img/render_14.png",   1120, 200, 300, 194, 0,   18],
+  ["img/render_15.png",   1300, 80,  180, 116, 0,   22],
+  ["img/render_16.png",   1060, 360, 260, 168, 0,   19],
+  ["img/metallica.jpg",   1320, 210, 160, 116, 0,   24],
+  ["img/render_20.png",   1280, 340, 200, 134, 0,   21],
+  ["img/image_poster.jpg",1380, 10,  120, 96,  0,   23],
+
+  // === TOP-CENTER cluster (phone screens, Jazari) ===
+  ["img/jazari_phones.png",  340, 60,  540, 290, 0,   30],
+  ["img/jazari_onboarding.png",780, 20, 130, 122, 1,  28],
+  ["img/render_09.png",      920, 80,  90,  86,  0,   26],
+  ["img/render_10.png",      930, 180, 60,  58,  0,   25],
+
+  // === LEFT column (browser screenshots, long docs) ===
+  ["img/render_07.png",    20,  320, 420, 236, 0,   15],
+  ["img/render_11.png",    60,  580, 500, 272, 0,   16],
+  ["img/photo_profile.jpg",30,  120, 80,  174, 0,   12],
+  ["img/render_01.png",    140, 140, 110, 154, 0,   14],
+
+  // === CENTER scatter (the messy middle) ===
+  ["img/render_03.png",    380, 380, 380, 186, 0,   28],
+  ["img/dodo_pizza_banner.jpg", 300, 560, 280, 128, -1, 20],
+  ["img/render_08.png",    700, 340, 140, 118, 0,   22],
+  ["img/render_06.png",    600, 480, 320, 174, 0,   24],
+  ["img/image_editorial.jpg",860,420,180, 140, 0,   18],
+  ["img/dodo_photo.jpg",   460, 700, 300, 168, 0,   26],
+
+  // === MID-RIGHT (Jazari brand, merch) ===
+  ["img/jazari_merch.jpg", 1000, 560, 160, 206, 0,  20],
+  ["img/jazari_hero.jpg",  1100, 700, 380, 204, 0,  22],
+  ["img/photo_studio.jpg", 850, 680,  200, 112, 0,  18],
+
+  // === BIG SCATTER below (like bottom half of Figma canvas) ===
+  ["img/render_04.png",    100, 900,  380, 186, 0,  24],
+  ["img/render_05.png",    500, 920,  380, 186, 0,  22],
+  ["img/arriva.jpg",       900, 880,  240, 172, 0,  20],
+  ["img/mexican.jpg",      1150,920,  220, 166, 0,  18],
+
+  ["img/render_17.png",    200, 1140, 400, 258, 0,  26],
+  ["img/render_18.png",    650, 1120, 400, 258, 0,  24],
+  ["img/photo_8.jpg",      1080,1100, 300, 168, 0,  20],
+
+  // === DEEP BOTTOM scatter ===
+  ["img/jazari_hero2.jpg", 80,  1440, 460, 248, 0,  22],
+  ["img/render_19.png",    600, 1460, 220, 146, 0,  18],
+  ["img/render_02.png",    850, 1420, 360, 202, 0,  24],
+  ["img/render_21.png",    300, 1680, 340, 118, 0,  20],
+  ["img/image_recent.jpg", 700, 1700, 400, 42,  0,  16],
+  ["img/render_12.png",    100, 1760, 240, 188, 0,  22],
+  ["img/photo_1610.png",   1200,1500, 100, 216, 0,  14],
+];
+
+const c = document.getElementById('c');
+const vw = window.innerWidth;
+const scale = vw / 1500; // scale positions to viewport
+
+D.forEach(([src, x, y, w, h, rot, z]) => {
+  const el = document.createElement('div');
+  el.className = 'p';
+  const sx = Math.round(x * scale);
+  const sw = Math.round(w * scale);
+  const sh = Math.round(h * scale);
+  el.style.cssText = `left:${sx}px;top:${y}px;width:${sw}px;height:${sh}px;transform:rotate(${rot}deg);z-index:${z}`;
+  el.dataset.rot = rot;
+  el.dataset.z = z;
+  const img = document.createElement('img');
+  img.src = src;
+  img.alt = '';
+  img.loading = 'lazy';
+  el.appendChild(img);
+  c.appendChild(el);
+});
+
+// Subtle parallax
+let t = false;
+window.addEventListener('scroll', () => {
+  if (!t) {
+    requestAnimationFrame(() => {
+      const y = window.scrollY;
+      document.querySelectorAll('.p').forEach(el => {
+        const z = parseInt(el.dataset.z);
+        const d = z > 24 ? 0.03 : z > 18 ? 0.015 : 0.005;
+        el.style.transform = `translateY(${y * d}px) rotate(${el.dataset.rot}deg)`;
+      });
+      t = false;
+    });
+    t = true;
+  }
+});
+</script>
+</body>
+</html>
