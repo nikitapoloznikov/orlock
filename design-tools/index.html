@@ -57,7 +57,7 @@ body{
 
 /* Header */
 header{
-  padding:28px 0 20px;
+  padding:28px 0 34px;
   display:flex;
   align-items:center;
   gap:16px;
@@ -228,6 +228,25 @@ footer{
   main.has-hover .category.hovered{
     opacity:1;
   }
+}
+
+/* Scale up 20% for large displays (2560×1440+) */
+@media(min-width:2200px){
+  .container{max-width:1320px}
+  header h1{font-size:19px}
+  .search-field{width:192px;padding:7px 58px 7px 12px;font-size:14px;border-radius:10px}
+  .search-field:focus{width:264px}
+  .search-shortcut{font-size:12px}
+  .search-shortcut kbd{font-size:11px;padding:2px 6px}
+  .category{margin-bottom:17px}
+  .category-title{width:168px;font-size:14px}
+  .tools-grid{gap:1px 17px}
+  .tool-card{gap:6px;padding:3px 0}
+  .tool-favicon{width:17px;height:17px}
+  .tool-name{font-size:16px}
+  .theme-btn{font-size:13px;padding:6px 10px}
+  footer{font-size:14px;padding:24px 0 38px}
+  header{padding:34px 0 41px;gap:19px}
 }
 
 @media(max-width:640px){
