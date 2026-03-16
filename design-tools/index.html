@@ -283,10 +283,13 @@ footer{
   header{padding:34px 0 41px;gap:19px}
 }
 
-/* Effect canvas — full viewport background */
+/* Effect canvas — bottom only, not full viewport */
 .shader-wrap{
   position:fixed;
-  inset:0;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:38vh;
   pointer-events:none;
   z-index:0;
 }
@@ -298,10 +301,10 @@ footer{
 .container{position:relative;z-index:1}
 
 /* Shader glow — CSS handles both themes */
-.shader-wrap{mix-blend-mode:screen}
+.shader-wrap{mix-blend-mode:screen;filter:blur(4px)}
 html[data-theme="light"] .shader-wrap{
   mix-blend-mode:multiply;
-  filter:invert(1) hue-rotate(180deg) saturate(1.4) contrast(1.3);
+  filter:blur(4px) invert(1) hue-rotate(180deg) saturate(1.4) contrast(1.3);
 }
 
 @media(max-width:640px){
@@ -707,9 +710,12 @@ float noise(vec2 p){
   return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
 }
 float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,.6,-.6,.8);
-  for(int i=0;i<5;i++){v+=a*noise(p);p=r*p*2.;a*=.5;}return v;}
+  for(int i=0;i<3;i++){v+=a*noise(p);p=r*p*2.;a*=.5;}return v;}
 
 void main(){
+  // Early-out: skip expensive noise for pixels above visible glow
+  if(vUv.y>.75){fragColor=vec4(0,0,0,1);return;}
+
   float T=u_time,s=u_seed;
 
   // Palettes
@@ -737,9 +743,8 @@ void main(){
   float breath=smoothstep(0.,.35,phase)-smoothstep(.45,.85,phase);
   float bR=1.+breath*.06,bB=1.+breath*.18;
 
-  // Stripe distance
-  float wave=fbm(vec2(vUv.x*3.+T*.2+s,T*.15+s))*.02
-            +fbm(vec2(vUv.x*6.-T*.15+s*2.,T*.1))*.01;
+  // Stripe distance — single wave (CSS blur hides fine detail)
+  float wave=fbm(vec2(vUv.x*3.+T*.2+s,T*.15+s))*.025;
   float d=(vUv.y+wave)*15./bR;
 
   // HDR glow layers
@@ -748,17 +753,14 @@ void main(){
   float mid=exp(-d*d*10.)*1.2;
   float outer=exp(-d*d*3.)*.4;
 
-  // Animated rays
-  float rayN=fbm(vec2(vUv.x*48.+T*.35+s,vUv.y*3.))*.45
-            +fbm(vec2(vUv.x*84.-T*.25+s*2.,vUv.y*2.))*.3
-            +fbm(vec2(vUv.x*135.+T*.45+s*3.,vUv.y*1.5))*.25;
+  // Rays — single FBM layer (CSS blur smooths the rest)
+  float rayN=fbm(vec2(vUv.x*48.+T*.35+s,vUv.y*3.));
   float rayMask=smoothstep(0.,.04,d)*smoothstep(.3,.08,d);
   float rays=rayN*rayMask*2.*bB;
 
-  // Horizontal squeeze + hotspots
+  // Horizontal squeeze (no FBM hotspots — CSS blur hides them)
   float hx=(vUv.x-.5)*u_aspect;
   float hBright=.1+.9*exp(-hx*hx*4.8);
-  hBright+=fbm(vec2(vUv.x*30.+s,T*.18))*.2*hBright;
 
   // Two-color gradient with animated noise boundary
   float xn=vUv.x+fbm(vec2(vUv.x*3.+T*.3+s,T*.2))*.18;
@@ -792,19 +794,15 @@ uniform vec2 u_dir;
 void main(){
   vec2 ts=u_dir;
   vec3 sum=vec3(0.);
-  sum+=texture(u_tex,vUv-ts*6.).rgb*.002;
-  sum+=texture(u_tex,vUv-ts*5.).rgb*.009;
-  sum+=texture(u_tex,vUv-ts*4.).rgb*.028;
-  sum+=texture(u_tex,vUv-ts*3.).rgb*.066;
+  sum+=texture(u_tex,vUv-ts*4.).rgb*.016;
+  sum+=texture(u_tex,vUv-ts*3.).rgb*.054;
   sum+=texture(u_tex,vUv-ts*2.).rgb*.121;
-  sum+=texture(u_tex,vUv-ts*1.).rgb*.176;
-  sum+=texture(u_tex,vUv).rgb*.196;
-  sum+=texture(u_tex,vUv+ts*1.).rgb*.176;
+  sum+=texture(u_tex,vUv-ts*1.).rgb*.194;
+  sum+=texture(u_tex,vUv).rgb*.23;
+  sum+=texture(u_tex,vUv+ts*1.).rgb*.194;
   sum+=texture(u_tex,vUv+ts*2.).rgb*.121;
-  sum+=texture(u_tex,vUv+ts*3.).rgb*.066;
-  sum+=texture(u_tex,vUv+ts*4.).rgb*.028;
-  sum+=texture(u_tex,vUv+ts*5.).rgb*.009;
-  sum+=texture(u_tex,vUv+ts*6.).rgb*.002;
+  sum+=texture(u_tex,vUv+ts*3.).rgb*.054;
+  sum+=texture(u_tex,vUv+ts*4.).rgb*.016;
   fragColor=vec4(sum,1.);
 }`);
 
@@ -841,21 +839,25 @@ let fboFull, fboBloomA, fboBloomB;
 let W,H;
 
 function resize(){
-  const dpr=Math.min(window.devicePixelRatio,2);
+  const dpr=Math.min(window.devicePixelRatio,1.5);
   W=Math.round(wrap.clientWidth*dpr);
   H=Math.round(wrap.clientHeight*dpr);
   canvas.width=W; canvas.height=H;
   canvas.style.width=wrap.clientWidth+'px';
   canvas.style.height=wrap.clientHeight+'px';
   fboFull=mkFBO(W,H);
-  const bw=Math.round(W/4), bh=Math.round(H/4);
+  const bw=Math.round(W/6), bh=Math.round(H/6);
   fboBloomA=mkFBO(bw,bh);
   fboBloomB=mkFBO(bw,bh);
 }
 resize();
 window.addEventListener('resize',resize);
 
+let lastFrame=0;
 function frame(t){
+  requestAnimationFrame(frame);
+  if(t-lastFrame<71) return; // 14fps
+  lastFrame=t;
   const T=t*.001;
 
   // Pass 1: Glow → FBO full
@@ -903,8 +905,6 @@ function frame(t){
   gl.uniform1i(cU.bloom,1);
   gl.uniform1f(cU.str,1.5);
   drawQuad();
-
-  requestAnimationFrame(frame);
 }
 requestAnimationFrame(frame);
 })();
