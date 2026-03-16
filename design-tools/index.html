@@ -164,6 +164,35 @@ header h1{
 }
 .tool-card:hover{color:var(--hover-text)}
 
+/* Tooltip (desktop only) */
+.tooltip{
+  position:fixed;
+  pointer-events:none;
+  opacity:0;
+  z-index:1000;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:10px 13px;
+  max-width:300px;
+  font-size:13px;
+  line-height:1.5;
+  color:var(--text2);
+  transition:opacity 0.15s ease;
+  box-shadow:0 4px 16px rgba(0,0,0,0.25);
+}
+.tooltip.visible{opacity:1}
+.tooltip .tt-desc{color:var(--text);display:block;margin-bottom:12px}
+.tooltip .tt-meta{display:flex;gap:5px;flex-wrap:wrap}
+.tooltip .tt-badge{
+  font-size:10px;
+  color:var(--text2);
+  background:var(--border);
+  border-radius:4px;
+  padding:2px 7px;
+  white-space:nowrap;
+}
+
 .tool-favicon{
   width:14px;
   height:14px;
@@ -219,6 +248,7 @@ footer{
   font-size:12px;
   font-weight:400;
   color:var(--text3);
+  mix-blend-mode:difference;
 }
 
 /* Section hover dimming (desktop only) */
@@ -253,10 +283,32 @@ footer{
   header{padding:34px 0 41px;gap:19px}
 }
 
+/* Effect canvas — full viewport background */
+.shader-wrap{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:0;
+}
+.shader-wrap canvas{
+  display:block;
+  width:100%;
+  height:100%;
+}
+.container{position:relative;z-index:1}
+
+/* Shader glow — CSS handles both themes */
+.shader-wrap{mix-blend-mode:screen}
+html[data-theme="light"] .shader-wrap{
+  mix-blend-mode:multiply;
+  filter:invert(1) hue-rotate(180deg) saturate(1.4) contrast(1.3);
+}
+
 @media(max-width:640px){
   .container{padding:0 16px}
   .category{flex-direction:column;gap:4px}
   .category-title{width:auto}
+  .shader-wrap{height:220px;margin-top:24px}
 }
 </style>
 </head>
@@ -277,146 +329,147 @@ footer{
   <main id="main"></main>
   <footer>&copy;2026 by Orlock</footer>
 </div>
+<div class="shader-wrap" id="shaderWrap"><canvas id="shaderCanvas"></canvas></div>
+
 
 <script>
 const TOOLS = [
   { cat: "Inspiration", tools: [
-    { name: "60fps", url: "https://60fps.design/" },
-    { name: "Awwwards", url: "https://www.awwwards.com/" },
-    { name: "Cosmos", url: "https://www.cosmos.so/" },
-    { name: "Curated Design", url: "https://www.curated.design/" },
-    { name: "Design Spells", url: "https://www.designspells.com/" },
-    { name: "Game UI Database", url: "https://www.gameuidatabase.com/" },
-    { name: "Godly", url: "https://godly.website/" },
-    { name: "HUDS+GUIS", url: "https://www.hudsandguis.com/" },
-    { name: "Interface In Game", url: "https://interfaceingame.com/" },
-    { name: "Layers", url: "https://layers.to/explore" },
-    { name: "loadmo.re", url: "https://loadmo.re/" },
-    { name: "Minimal Gallery", url: "https://minimal.gallery/" },
-    { name: "Minimum", url: "https://mnmm.xyz/" },
-    { name: "Mobbin", url: "https://mobbin.com/" },
-    { name: "Pinterest", url: "https://pinterest.com/" },
-    { name: "Rebrand", url: "https://www.rebrand.gallery/" },
-    { name: "Saaspo", url: "https://saaspo.com/" },
-    { name: "SearchSystem", url: "https://searchsystem.co/" },
-    { name: "SEESAW", url: "https://www.seesaw.website/" },
-    { name: "Supahero", url: "https://www.supahero.io/" },
-    { name: "D1S1", url: "https://d1s1.com/" },
+    { name: "60fps", url: "https://60fps.design/", d: "Curated gallery of smooth, high-performance web animations.", p: "Free" },
+    { name: "Awwwards", url: "https://www.awwwards.com/", d: "Web design awards platform showcasing the best digital experiences.", p: "Free / Paid" },
+    { name: "Cosmos", url: "https://www.cosmos.so/", d: "Visual bookmarking tool for designers to collect and organize references.", p: "Free / Paid" },
+    { name: "Curated Design", url: "https://www.curated.design/", d: "Hand-picked collection of outstanding web design inspiration.", p: "Free" },
+    { name: "Design Spells", url: "https://www.designspells.com/", d: "Catalog of delightful micro-interactions and UI details from real products.", p: "Free" },
+    { name: "Game UI Database", url: "https://www.gameuidatabase.com/", d: "Searchable archive of screenshots from game user interfaces.", p: "Free" },
+    { name: "Godly", url: "https://godly.website/", d: "Curated gallery of the best web design inspiration, updated daily.", p: "Free" },
+    { name: "HUDS+GUIS", url: "https://www.hudsandguis.com/", d: "Reference library of fictional UI and HUD designs from film and games.", p: "Free" },
+    { name: "Interface In Game", url: "https://interfaceingame.com/", d: "Collection of in-game UI screenshots organized by game and element.", p: "Free" },
+    { name: "Layers", url: "https://layers.to/explore", d: "Design community for sharing and discovering creative work.", p: "Free" },
+    { name: "loadmo.re", url: "https://loadmo.re/", d: "Curated gallery of website loading animations and transitions.", p: "Free" },
+    { name: "Minimal Gallery", url: "https://minimal.gallery/", d: "Collection of minimal, clean website designs for inspiration.", p: "Free" },
+    { name: "Minimum", url: "https://mnmm.xyz/", d: "Gallery of visually striking and experimental website designs.", p: "Free" },
+    { name: "Mobbin", url: "https://mobbin.com/", d: "Extensive library of real mobile and web app UI patterns.", p: "Free / Paid" },
+    { name: "Pinterest", url: "https://pinterest.com/", d: "Visual discovery platform for collecting and organizing ideas.", p: "Free", m: true },
+    { name: "Rebrand", url: "https://www.rebrand.gallery/", d: "Showcase of notable brand identity redesigns and visual evolutions.", p: "Free" },
+    { name: "Saaspo", url: "https://saaspo.com/", d: "Curated collection of the best SaaS website designs.", p: "Free" },
+    { name: "SearchSystem", url: "https://searchsystem.co/", d: "Design reference archive spanning graphic, product, and digital design.", p: "Free / Paid" },
+    { name: "SEESAW", url: "https://www.seesaw.website/", d: "Curated gallery of immersive and interactive website experiences.", p: "Free" },
+    { name: "Supahero", url: "https://www.supahero.io/", d: "Gallery of hero sections and above-the-fold website designs.", p: "Free" },
+    { name: "D1S1", url: "https://d1s1.com/", d: "Curated design inspiration across digital and print media.", p: "Free" },
   ]},
   { cat: "Components", tools: [
-    { name: "21st.dev", url: "https://21st.dev/" },
-    { name: "Component Gallery", url: "https://component.gallery/" },
-    { name: "Cursify", url: "https://cursify.vercel.app/" },
-    { name: "Fancy Components", url: "https://www.fancycomponents.dev/" },
-    { name: "Framer University", url: "https://framer.university/resources" },
-    { name: "Motion Primitives", url: "https://motion-primitives.com/" },
-    { name: "NumberFlow", url: "https://number-flow.barvian.me/" },
-    { name: "React Bits", url: "https://www.reactbits.dev/" },
+    { name: "21st.dev", url: "https://21st.dev/", d: "AI-powered component registry for React with copy-paste code.", p: "Free / Paid", m: true },
+    { name: "Component Gallery", url: "https://component.gallery/", d: "Collection of real-world UI component examples from design systems.", p: "Free" },
+    { name: "Cursify", url: "https://cursify.vercel.app/", d: "Library of custom cursor effects and animations for websites.", p: "Free" },
+    { name: "Fancy Components", url: "https://www.fancycomponents.dev/", d: "Collection of animated React components with beautiful interactions.", p: "Free" },
+    { name: "Framer University", url: "https://framer.university/resources", d: "Educational resources, templates, and components for Framer.", p: "Free / Paid" },
+    { name: "Motion Primitives", url: "https://motion-primitives.com/", d: "Open-source animated React components built with Framer Motion.", p: "Free" },
+    { name: "NumberFlow", url: "https://number-flow.barvian.me/", d: "React component for smooth, animated number transitions.", p: "Free" },
+    { name: "React Bits", url: "https://www.reactbits.dev/", d: "Curated collection of animated React components ready to copy-paste.", p: "Free", m: true },
   ]},
   { cat: "Code Gen", tools: [
-    { name: "Bolt.new", url: "https://bolt.new/" },
-    { name: "ChatGPT Canvas", url: "https://openai.com/index/introducing-canvas/" },
-    { name: "Claude Code", url: "https://claude.com/product/claude-code" },
-    { name: "Lovable", url: "https://lovable.dev/" },
-    { name: "OpenAI Codex", url: "https://openai.com/codex/" },
-    { name: "Replit", url: "https://replit.com/" },
-    { name: "v0 by Vercel", url: "https://v0.dev/" },
+    { name: "Bolt.new", url: "https://bolt.new/", d: "AI-powered full-stack web app builder that runs entirely in the browser.", p: "Free / Paid", m: true },
+    { name: "ChatGPT Canvas", url: "https://openai.com/index/introducing-canvas/", d: "Collaborative coding and writing surface inside ChatGPT.", p: "Paid" },
+    { name: "Claude Code", url: "https://claude.com/product/claude-code", d: "Agentic CLI tool for coding with Claude directly in your terminal.", p: "Paid", m: true },
+    { name: "Lovable", url: "https://lovable.dev/", d: "AI full-stack engineer that builds production web apps from prompts.", p: "Free / Paid", m: true },
+    { name: "OpenAI Codex", url: "https://openai.com/codex/", d: "Cloud-based AI coding agent that runs tasks in a sandbox.", p: "Paid", m: true },
+    { name: "Replit", url: "https://replit.com/", d: "Browser-based IDE with AI-assisted coding and instant deployment.", p: "Free / Paid", m: true },
+    { name: "v0 by Vercel", url: "https://v0.dev/", d: "AI tool that generates React UI from text prompts and images.", p: "Free / Paid", m: true },
   ]},
   { cat: "Code Assist", tools: [
-    { name: "Aider", url: "https://aider.chat/" },
-    { name: "Cline", url: "https://cline.bot/" },
-    { name: "Continue", url: "https://www.continue.dev/" },
-    { name: "Cursor", url: "https://www.cursor.com/" },
-    { name: "GitHub Copilot", url: "https://github.com/features/copilot" },
-    { name: "Windsurf", url: "https://codeium.com/windsurf" },
-    { name: "Zed", url: "https://zed.dev/agentic" },
-    { name: "Ghostty", url: "https://ghostty.org/" },
-    { name: "Codex", url: "https://openai.com/codex/" },
+    { name: "Aider", url: "https://aider.chat/", d: "Open-source AI pair programming tool that works in your terminal.", p: "Free", m: true },
+    { name: "Cline", url: "https://cline.bot/", d: "Autonomous AI coding agent as a VS Code extension.", p: "Free", m: true },
+    { name: "Continue", url: "https://www.continue.dev/", d: "Open-source AI code assistant for VS Code and JetBrains.", p: "Free", m: true },
+    { name: "Cursor", url: "https://www.cursor.com/", d: "AI-first code editor built on VS Code with deep model integration.", p: "Free / Paid", m: true },
+    { name: "GitHub Copilot", url: "https://github.com/features/copilot", d: "AI pair programmer that suggests code inline as you type.", p: "Free / Paid", m: true },
+    { name: "Windsurf", url: "https://codeium.com/windsurf", d: "AI-powered code editor with agentic coding flows.", p: "Free / Paid", m: true },
+    { name: "Zed", url: "https://zed.dev/agentic", d: "High-performance code editor with built-in AI assistant.", p: "Free", m: true },
+    { name: "Ghostty", url: "https://ghostty.org/", d: "Fast, native terminal emulator built with Zig for macOS and Linux.", p: "Free", m: true },
+    { name: "Codex", url: "https://openai.com/codex/", d: "OpenAI's cloud-based coding agent for autonomous task execution.", p: "Paid", m: true },
   ]},
   { cat: "Interface", tools: [
-    { name: "Figma", url: "https://figma.com" },
-    { name: "Framer", url: "https://www.framer.com/" },
-    { name: "Penpot", url: "https://penpot.app/" },
-    { name: "Rive", url: "https://rive.app" },
+    { name: "Figma", url: "https://figma.com", d: "Collaborative interface design tool with prototyping and dev mode.", p: "Free / Paid", m: true },
+    { name: "Framer", url: "https://www.framer.com/", d: "No-code website builder with design-tool-level creative control.", p: "Free / Paid", m: true },
+    { name: "Penpot", url: "https://penpot.app/", d: "Open-source design and prototyping tool that works in the browser.", p: "Free", m: true },
+    { name: "Rive", url: "https://rive.app", d: "Interactive animation tool for creating runtime graphics for apps and web.", p: "Free / Paid", m: true },
   ]},
   { cat: "Visual", tools: [
-    { name: "Bitspace", url: "https://bitspace.sh/" },
-    { name: "cables", url: "https://cables.gl/" },
-    { name: "Nodes", url: "https://nodes.io/" },
-    { name: "NodeToy", url: "https://nodetoy.co/" },
-    { name: "Paper", url: "https://paper.design/" },
-    { name: "ShaderToy", url: "https://www.shadertoy.com/" },
-    { name: "TouchDesigner", url: "https://derivative.ca/" },
-    { name: "Unicorn.studio", url: "https://www.unicorn.studio/" },
+    { name: "Bitspace", url: "https://bitspace.sh/", d: "Node-based visual programming environment for creative coding.", p: "Free" },
+    { name: "cables", url: "https://cables.gl/", d: "Browser-based visual programming tool for creating interactive WebGL content.", p: "Free" },
+    { name: "Nodes", url: "https://nodes.io/", d: "Visual canvas for creative coding, data visualization, and generative art.", p: "Paid" },
+    { name: "NodeToy", url: "https://nodetoy.co/", d: "Visual shader editor for creating GPU shaders without code.", p: "Free / Paid" },
+    { name: "Paper", url: "https://paper.design/", d: "Professional design tool for composing interfaces on a 2D canvas.", p: "Free", m: true },
+    { name: "ShaderToy", url: "https://www.shadertoy.com/", d: "Community platform for creating and sharing GLSL fragment shaders.", p: "Free", m: true },
+    { name: "TouchDesigner", url: "https://derivative.ca/", d: "Node-based visual programming platform for real-time interactive media.", p: "Free / Paid", m: true },
+    { name: "Unicorn.studio", url: "https://www.unicorn.studio/", d: "No-code WebGL editor for creating interactive visual effects for websites.", p: "Free / Paid" },
   ]},
   { cat: "Motion", tools: [
-    { name: "Cavalry", url: "https://cavalry.scenegroup.co/" },
-    { name: "Jitter", url: "https://jitter.video/" },
-    { name: "Lottie Creator", url: "https://lottiefiles.com/lottie-creator" },
-    { name: "Lottielab", url: "https://www.lottielab.com/" },
-    { name: "Theatre.js", url: "https://www.theatrejs.com/" },
+    { name: "Cavalry", url: "https://cavalry.scenegroup.co/", d: "Procedural 2D motion graphics and animation application.", p: "Paid", m: true },
+    { name: "Jitter", url: "https://jitter.video/", d: "Browser-based motion design tool for creating animated content.", p: "Free / Paid" },
+    { name: "Lottie Creator", url: "https://lottiefiles.com/lottie-creator", d: "Visual editor for creating and editing Lottie animations.", p: "Free / Paid", m: true },
+    { name: "Lottielab", url: "https://www.lottielab.com/", d: "Design tool for creating lightweight Lottie and dotLottie animations.", p: "Free / Paid" },
+    { name: "Theatre.js", url: "https://www.theatrejs.com/", d: "Open-source animation library and visual editor for JS and Three.js.", p: "Free" },
   ]},
   { cat: "Screen Recording", tools: [
-    { name: "Recordly", url: "https://recordly.dev/" },
+    { name: "Recordly", url: "https://recordly.dev/", d: "Lightweight macOS screen recorder for quick captures and demos.", p: "Free / Paid" },
   ]},
   { cat: "Audio", tools: [
-    { name: "ElevenLabs", url: "https://elevenlabs.io/" },
-    { name: "FMOD", url: "https://www.fmod.com/" },
-    { name: "Splice", url: "https://splice.com/features/sounds" },
-    { name: "Suno", url: "https://suno.com/" },
+    { name: "ElevenLabs", url: "https://elevenlabs.io/", d: "AI voice synthesis and cloning platform for realistic speech generation.", p: "Free / Paid", m: true },
+    { name: "FMOD", url: "https://www.fmod.com/", d: "Adaptive audio middleware for games and interactive applications.", p: "Free / Paid" },
+    { name: "Splice", url: "https://splice.com/features/sounds", d: "Royalty-free sample library and music production marketplace.", p: "Paid" },
+    { name: "Suno", url: "https://suno.com/", d: "AI music generation tool that creates full songs from text prompts.", p: "Free / Paid", m: true },
   ]},
   { cat: "3D", tools: [
-
-    { name: "Bezi", url: "https://www.bezi.com/" },
-    { name: "Blender", url: "https://www.blender.org/" },
-    { name: "Houdini", url: "https://www.sidefx.com/" },
-    { name: "Spline", url: "https://spline.design/" },
-    { name: "Womp", url: "https://womp.com/" },
+    { name: "Bezi", url: "https://www.bezi.com/", d: "Collaborative 3D design tool for creating interactive spatial interfaces.", p: "Free / Paid" },
+    { name: "Blender", url: "https://www.blender.org/", d: "Free, open-source 3D creation suite for modeling, animation, and rendering.", p: "Free", m: true },
+    { name: "Houdini", url: "https://www.sidefx.com/", d: "Procedural 3D software for VFX, simulation, and technical art.", p: "Free / Paid", m: true },
+    { name: "Spline", url: "https://spline.design/", d: "Browser-based 3D design tool with real-time collaboration and web export.", p: "Free / Paid", m: true },
+    { name: "Womp", url: "https://womp.com/", d: "Intuitive browser-based 3D modeling tool with smooth clay-like sculpting.", p: "Free / Paid" },
   ]},
   { cat: "glTF", tools: [
-    { name: "gltfjsx", url: "https://github.com/pmndrs/gltfjsx" },
-    { name: "gltfpack", url: "https://github.com/zeux/meshoptimizer/blob/master/gltf/README.md" },
-    { name: "Needle Viewer", url: "https://viewer.needle.tools/" },
+    { name: "gltfjsx", url: "https://github.com/pmndrs/gltfjsx", d: "CLI tool that converts glTF models into declarative React Three Fiber JSX.", p: "Free" },
+    { name: "gltfpack", url: "https://github.com/zeux/meshoptimizer/blob/master/gltf/README.md", d: "Command-line tool for optimizing and compressing glTF files.", p: "Free" },
+    { name: "Needle Viewer", url: "https://viewer.needle.tools/", d: "Browser-based glTF viewer with lighting, animation, and debug tools.", p: "Free", m: true },
   ]},
   { cat: "Digital Fashion", tools: [
-    { name: "CLO", url: "https://www.clo3d.com/" },
-    { name: "Marvelous Designer", url: "https://www.marvelousdesigner.com/" },
-    { name: "Style3D", url: "https://www.linctex.com/" },
+    { name: "CLO", url: "https://www.clo3d.com/", d: "3D garment design and simulation software for fashion industry.", p: "Paid", m: true },
+    { name: "Marvelous Designer", url: "https://www.marvelousdesigner.com/", d: "3D clothing simulation tool used in games, film, and fashion.", p: "Paid" },
+    { name: "Style3D", url: "https://www.linctex.com/", d: "Digital fashion platform for 3D garment design and virtual fitting.", p: "Paid" },
   ]},
   { cat: "Volumetric", tools: [
-    { name: "Depthkit", url: "https://www.depthkit.tv/" },
-    { name: "KIRI Engine", url: "https://www.kiriengine.app/" },
-    { name: "Luma AI", url: "https://lumalabs.ai/interactive-scenes" },
-    { name: "Polycam", url: "https://poly.cam/" },
-    { name: "RealityScan", url: "https://www.unrealengine.com/en-US/realityscan" },
-    { name: "SuperSplat Editor", url: "https://superspl.at/editor" },
+    { name: "Depthkit", url: "https://www.depthkit.tv/", d: "Volumetric video capture system for creating 3D holograms.", p: "Paid" },
+    { name: "KIRI Engine", url: "https://www.kiriengine.app/", d: "Mobile 3D scanning app using photogrammetry for creating 3D models.", p: "Free / Paid" },
+    { name: "Luma AI", url: "https://lumalabs.ai/interactive-scenes", d: "AI-powered 3D capture and reconstruction from photos and video.", p: "Free / Paid", m: true },
+    { name: "Polycam", url: "https://poly.cam/", d: "LiDAR and photogrammetry 3D scanning app for iOS and web.", p: "Free / Paid" },
+    { name: "RealityScan", url: "https://www.unrealengine.com/en-US/realityscan", d: "Free photogrammetry app by Epic for scanning objects into 3D models.", p: "Free" },
+    { name: "SuperSplat Editor", url: "https://superspl.at/editor", d: "Browser-based editor for viewing and editing 3D Gaussian Splats.", p: "Free" },
   ]},
   { cat: "Whiteboard", tools: [
-    { name: "Excalidraw", url: "https://excalidraw.com/" },
-    { name: "FigJam", url: "https://www.figma.com/figjam/" },
-    { name: "Miro", url: "https://miro.com/" },
-    { name: "Muse", url: "https://museapp.com/" },
-    { name: "tldraw", url: "https://www.tldraw.com/" },
+    { name: "Excalidraw", url: "https://excalidraw.com/", d: "Open-source hand-drawn style whiteboard for quick diagrams and sketches.", p: "Free", m: true },
+    { name: "FigJam", url: "https://www.figma.com/figjam/", d: "Figma's collaborative whiteboard for brainstorming and planning.", p: "Free / Paid", m: true },
+    { name: "Miro", url: "https://miro.com/", d: "Collaborative online whiteboard for teams with extensive integrations.", p: "Free / Paid", m: true },
+    { name: "Muse", url: "https://museapp.com/", d: "Spatial canvas app for deep thinking, research, and ideation on iPad and Mac.", p: "Paid" },
+    { name: "tldraw", url: "https://www.tldraw.com/", d: "Open-source infinite canvas whiteboard with a clean minimal interface.", p: "Free", m: true },
   ]},
   { cat: "Web Utility", tools: [
-    { name: "Color.review", url: "https://color.review/" },
-    { name: "Easing Editor", url: "https://animejs.com/easing-editor" },
-    { name: "Easing Functions", url: "https://easings.net/" },
-    { name: "Easing Gradients", url: "https://larsenwork.com/easing-gradients/" },
-    { name: "OKLCH Color Picker", url: "https://oklch.com/" },
-    { name: "Ray.so", url: "https://ray.so/" },
-    { name: "RegExr", url: "https://regexr.com/" },
-    { name: "SVGOMG", url: "https://jakearchibald.github.io/svgomg/" },
+    { name: "Color.review", url: "https://color.review/", d: "Tool for checking foreground/background color contrast accessibility.", p: "Free" },
+    { name: "Easing Editor", url: "https://animejs.com/easing-editor", d: "Visual editor for creating custom CSS and JS animation easing curves.", p: "Free" },
+    { name: "Easing Functions", url: "https://easings.net/", d: "Cheat sheet of common easing functions with visual previews and code.", p: "Free" },
+    { name: "Easing Gradients", url: "https://larsenwork.com/easing-gradients/", d: "Tool for creating smooth, perceptually uniform CSS gradients.", p: "Free" },
+    { name: "OKLCH Color Picker", url: "https://oklch.com/", d: "Perceptually uniform color picker using the OKLCH color space.", p: "Free" },
+    { name: "Ray.so", url: "https://ray.so/", d: "Beautiful code snippet image generator with syntax highlighting.", p: "Free" },
+    { name: "RegExr", url: "https://regexr.com/", d: "Online tool for learning, building, and testing regular expressions.", p: "Free" },
+    { name: "SVGOMG", url: "https://jakearchibald.github.io/svgomg/", d: "GUI for SVGO — optimizes and minifies SVG files in the browser.", p: "Free" },
   ]},
   { cat: "Desktop Utility", tools: [
-    { name: "LocalSend", url: "https://localsend.org/" },
-    { name: "Parsec", url: "https://parsec.app/" },
-    { name: "Raycast", url: "https://www.raycast.com/" },
-    { name: "ShareX", url: "https://getsharex.com/" },
-    { name: "Warp", url: "https://www.warp.dev/" },
+    { name: "LocalSend", url: "https://localsend.org/", d: "Open-source cross-platform file sharing over local network, no internet needed.", p: "Free" },
+    { name: "Parsec", url: "https://parsec.app/", d: "Ultra-low latency remote desktop streaming for work and gaming.", p: "Free / Paid" },
+    { name: "Raycast", url: "https://www.raycast.com/", d: "Productivity launcher for macOS with extensions, snippets, and AI.", p: "Free / Paid", m: true },
+    { name: "ShareX", url: "https://getsharex.com/", d: "Open-source screen capture and file sharing tool for Windows.", p: "Free" },
+    { name: "Warp", url: "https://www.warp.dev/", d: "Modern terminal with AI command search, blocks, and collaboration.", p: "Free / Paid", m: true },
   ]},
   { cat: "Emoji", tools: [
-    { name: "MakeEmoji", url: "https://makeemoji.com/" },
+    { name: "MakeEmoji", url: "https://makeemoji.com/", d: "Tool for creating custom animated emoji and stickers.", p: "Free / Paid" },
   ]},
 ];
 
@@ -463,7 +516,8 @@ function render() {
           let host = '';
           try { host = new URL(t.url).hostname; } catch {}
           const cls = DARK_FAVICONS.has(host) ? ' invert-dark' : '';
-          return `<a class="tool-card" href="${t.url}" target="_blank" rel="noopener">
+          const mcp = t.m ? ' · MCP' : '';
+          return `<a class="tool-card" href="${t.url}" target="_blank" rel="noopener" data-d="${t.d}" data-p="${t.p}${mcp}">
             <img class="tool-favicon${cls}" src="${getFaviconUrl(t.url)}" alt="" loading="lazy" onerror="this.style.display='none'">
             <span class="tool-name">${t.name}</span>
           </a>`;
@@ -493,6 +547,7 @@ function setTheme(mode) {
   document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === mode));
   document.documentElement.setAttribute('data-theme', mode);
   localStorage.setItem('theme', mode);
+  if (window._shaderNewSeed) window._shaderNewSeed();
 }
 (function() {
   const saved = localStorage.getItem('theme') || 'dark';
@@ -523,6 +578,44 @@ mainEl.addEventListener('mouseout', e => {
   }
 });
 
+// Tooltip (desktop only)
+if (window.matchMedia('(min-width:641px)').matches) {
+  const tip = document.createElement('div');
+  tip.className = 'tooltip';
+  document.body.appendChild(tip);
+  let timer = null;
+
+  document.addEventListener('mouseover', e => {
+    const card = e.target.closest('.tool-card');
+    if (!card || !card.dataset.d) { clearTimeout(timer); tip.classList.remove('visible'); return; }
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      const badges = card.dataset.p.split(' · ').map(b => `<span class="tt-badge">${b}</span>`).join('');
+      tip.innerHTML = `<span class="tt-desc">${card.dataset.d}</span><span class="tt-meta">${badges}</span>`;
+      const r = card.getBoundingClientRect();
+      let x = r.left;
+      let y = r.bottom + 6;
+      tip.style.left = x + 'px';
+      tip.style.top = y + 'px';
+      tip.classList.add('visible');
+      // Keep tooltip in viewport
+      requestAnimationFrame(() => {
+        const tr = tip.getBoundingClientRect();
+        if (tr.right > window.innerWidth - 12) tip.style.left = (window.innerWidth - tr.width - 12) + 'px';
+        if (tr.bottom > window.innerHeight - 12) { tip.style.top = (r.top - tr.height - 6) + 'px'; }
+      });
+    }, 400);
+  });
+
+  document.addEventListener('mouseout', e => {
+    const card = e.target.closest('.tool-card');
+    if (card) { clearTimeout(timer); tip.classList.remove('visible'); }
+  });
+}
+
+
+
+
 function onSearch(q) {
   q = q.toLowerCase().trim();
   document.querySelectorAll('.category').forEach(cat => {
@@ -537,6 +630,284 @@ function onSearch(q) {
     cat.classList.toggle('all-dimmed', !anyVisible && !!q);
   });
 }
+</script>
+
+<script>
+// ============================
+// Raw WebGL — Stripe + Custom Bloom Pipeline
+// Zero dependencies. CSS screen blend for theme.
+// ============================
+(function(){
+const canvas = document.getElementById('shaderCanvas');
+let gl = canvas.getContext('webgl2', {alpha:false});
+if(!gl){console.warn('No WebGL2');return;}
+gl.getExtension('EXT_color_buffer_half_float');
+gl.getExtension('EXT_color_buffer_float');
+const wrap = document.getElementById('shaderWrap');
+
+let seed = Math.random()*100;
+window._shaderNewSeed = () => { seed = Math.random()*100; };
+
+// --- Compile helper with error logging ---
+function mkProg(vs, fs){
+  const p=gl.createProgram();
+  [gl.VERTEX_SHADER,gl.FRAGMENT_SHADER].forEach((t,i)=>{
+    const s=gl.createShader(t); gl.shaderSource(s,[vs,fs][i]); gl.compileShader(s);
+    if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)) console.error('Shader compile:',gl.getShaderInfoLog(s));
+    gl.attachShader(p,s);
+  });
+  gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)) console.error('Program link:',gl.getProgramInfoLog(p));
+  return p;
+}
+
+// --- Full-screen quad ---
+const quadBuf=gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1,1,-1,-1,1,1,1]), gl.STATIC_DRAW);
+function drawQuad(){
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadBuf);
+  gl.vertexAttribPointer(0,2,gl.FLOAT,false,0,0);
+  gl.enableVertexAttribArray(0);
+  gl.drawArrays(gl.TRIANGLE_STRIP,0,4);
+}
+
+// --- FBO helper (half-float for HDR) ---
+function mkFBO(w,h){
+  const tex=gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA16F,w,h,0,gl.RGBA,gl.HALF_FLOAT,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  const fb=gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,tex,0);
+  const status=gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+  if(status!==gl.FRAMEBUFFER_COMPLETE) console.error('FBO incomplete:',status);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  return {fb,tex,w,h};
+}
+
+const VS=`#version 300 es
+layout(location=0) in vec2 a_pos;out vec2 vUv;
+void main(){vUv=a_pos*.5+.5;gl_Position=vec4(a_pos,0,1);}`;
+
+// === GLOW SHADER — the stripe ===
+const glowProg = mkProg(VS, `#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 fragColor;
+uniform float u_time,u_seed,u_aspect;
+
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){
+  vec2 i=floor(p),f=fract(p);f=f*f*f*(f*(f*6.-15.)+10.);
+  float a=hash(i),b=hash(i+vec2(1,0)),c=hash(i+vec2(0,1)),d=hash(i+vec2(1,1));
+  return mix(mix(a,b,f.x),mix(c,d,f.x),f.y);
+}
+float fbm(vec2 p){float v=0.,a=.5;mat2 r=mat2(.8,.6,-.6,.8);
+  for(int i=0;i<5;i++){v+=a*noise(p);p=r*p*2.;a*=.5;}return v;}
+
+void main(){
+  float T=u_time,s=u_seed;
+
+  // Palettes
+  int idx=int(mod(floor(s*3.7),7.));
+  vec3 cCore;
+  if(idx==0) cCore=vec3(.85,.95,1.);
+  else if(idx==1) cCore=vec3(1.,.85,.95);
+  else if(idx==2) cCore=vec3(1.,.95,.8);
+  else if(idx==3) cCore=vec3(.9,.85,1.);
+  else if(idx==4) cCore=vec3(.8,1.,.95);
+  else if(idx==5) cCore=vec3(1.,1.,.9);
+  else cCore=vec3(.9,1.,.9);
+
+  vec3 cA,cB;
+  if(idx==0){cA=vec3(.85,.12,.5);cB=vec3(.08,.6,.85);}       // magenta → teal
+  else if(idx==1){cA=vec3(.95,.65,.1);cB=vec3(.3,.08,.7);}    // amber → violet
+  else if(idx==2){cA=vec3(.95,.3,.25);cB=vec3(.06,.15,.55);}  // coral → navy
+  else if(idx==3){cA=vec3(.15,.4,1.);cB=vec3(.9,.15,.55);}    // electric blue → hot pink
+  else if(idx==4){cA=vec3(.1,.75,.4);cB=vec3(.85,.35,.08);}   // emerald → burnt orange
+  else if(idx==5){cA=vec3(.95,.6,.45);cB=vec3(.12,.1,.55);}   // peach → indigo
+  else{cA=vec3(.1,.8,.75);cB=vec3(.65,.05,.3);}               // turquoise → ruby
+
+  // Breathing
+  float phase=fract(T*.125);
+  float breath=smoothstep(0.,.35,phase)-smoothstep(.45,.85,phase);
+  float bR=1.+breath*.06,bB=1.+breath*.18;
+
+  // Stripe distance
+  float wave=fbm(vec2(vUv.x*3.+T*.2+s,T*.15+s))*.02
+            +fbm(vec2(vUv.x*6.-T*.15+s*2.,T*.1))*.01;
+  float d=(vUv.y+wave)*15./bR;
+
+  // HDR glow layers
+  float core=exp(-d*d*600.)*8.+exp(-d*d*150.)*4.;
+  float inner=exp(-d*d*40.)*2.5;
+  float mid=exp(-d*d*10.)*1.2;
+  float outer=exp(-d*d*3.)*.4;
+
+  // Animated rays
+  float rayN=fbm(vec2(vUv.x*48.+T*.35+s,vUv.y*3.))*.45
+            +fbm(vec2(vUv.x*84.-T*.25+s*2.,vUv.y*2.))*.3
+            +fbm(vec2(vUv.x*135.+T*.45+s*3.,vUv.y*1.5))*.25;
+  float rayMask=smoothstep(0.,.04,d)*smoothstep(.3,.08,d);
+  float rays=rayN*rayMask*2.*bB;
+
+  // Horizontal squeeze + hotspots
+  float hx=(vUv.x-.5)*u_aspect;
+  float hBright=.1+.9*exp(-hx*hx*4.8);
+  hBright+=fbm(vec2(vUv.x*30.+s,T*.18))*.2*hBright;
+
+  // Two-color gradient with animated noise boundary
+  float xn=vUv.x+fbm(vec2(vUv.x*3.+T*.3+s,T*.2))*.18;
+  vec3 cBlend=mix(cA,cB,smoothstep(.2,.8,xn));
+
+  // Compose — keep colors pure, no black gaps
+  float totalGlow=outer+mid+inner+rays+core;
+  // Color blend: weighted by layer, core pushes toward white
+  vec3 colTint=cBlend*(outer+mid+inner+rays)+mix(vec3(1.),cCore,.12)*core;
+  // Normalize to keep color saturated, then multiply by intensity
+  vec3 pureColor=totalGlow>.001 ? colTint/totalGlow : vec3(0.);
+  // Boost saturation to avoid washed-out midtones
+  float lum=dot(pureColor,vec3(.299,.587,.114));
+  pureColor=mix(vec3(lum),pureColor,1.4);
+  // Apply intensity
+  vec3 col=pureColor*totalGlow;
+  col*=bB*hBright;
+
+  // Fade top
+  col*=smoothstep(.7,.05,vUv.y);
+
+  fragColor=vec4(col,1.);
+}`);
+
+// === BLUR SHADER (separable gaussian 13-tap) ===
+const blurProg = mkProg(VS, `#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 fragColor;
+uniform sampler2D u_tex;
+uniform vec2 u_dir;
+void main(){
+  vec2 ts=u_dir;
+  vec3 sum=vec3(0.);
+  sum+=texture(u_tex,vUv-ts*6.).rgb*.002;
+  sum+=texture(u_tex,vUv-ts*5.).rgb*.009;
+  sum+=texture(u_tex,vUv-ts*4.).rgb*.028;
+  sum+=texture(u_tex,vUv-ts*3.).rgb*.066;
+  sum+=texture(u_tex,vUv-ts*2.).rgb*.121;
+  sum+=texture(u_tex,vUv-ts*1.).rgb*.176;
+  sum+=texture(u_tex,vUv).rgb*.196;
+  sum+=texture(u_tex,vUv+ts*1.).rgb*.176;
+  sum+=texture(u_tex,vUv+ts*2.).rgb*.121;
+  sum+=texture(u_tex,vUv+ts*3.).rgb*.066;
+  sum+=texture(u_tex,vUv+ts*4.).rgb*.028;
+  sum+=texture(u_tex,vUv+ts*5.).rgb*.009;
+  sum+=texture(u_tex,vUv+ts*6.).rgb*.002;
+  fragColor=vec4(sum,1.);
+}`);
+
+// === COMPOSITE SHADER (sharp + bloom + ACES) ===
+const compProg = mkProg(VS, `#version 300 es
+precision highp float;
+in vec2 vUv;out vec4 fragColor;
+uniform sampler2D u_sharp,u_bloom;
+uniform float u_bloomStr;
+void main(){
+  vec3 s=texture(u_sharp,vUv).rgb;
+  vec3 b=texture(u_bloom,vUv).rgb;
+  // Chromatic aberration on bloom
+  float ca=.003;
+  b.r=texture(u_bloom,vUv+vec2(ca,0.)).r;
+  b.b=texture(u_bloom,vUv-vec2(ca,0.)).b;
+  vec3 hdr=s+b*u_bloomStr;
+  // ACES
+  vec3 m=(hdr*(2.51*hdr+.03))/(hdr*(2.43*hdr+.59)+.14);
+  fragColor=vec4(m,1.);
+}`);
+
+// --- Uniforms ---
+const gU={
+  time:gl.getUniformLocation(glowProg,'u_time'),
+  seed:gl.getUniformLocation(glowProg,'u_seed'),
+  aspect:gl.getUniformLocation(glowProg,'u_aspect')
+};
+const bU={tex:gl.getUniformLocation(blurProg,'u_tex'),dir:gl.getUniformLocation(blurProg,'u_dir')};
+const cU={sharp:gl.getUniformLocation(compProg,'u_sharp'),bloom:gl.getUniformLocation(compProg,'u_bloom'),str:gl.getUniformLocation(compProg,'u_bloomStr')};
+
+// --- FBOs ---
+let fboFull, fboBloomA, fboBloomB;
+let W,H;
+
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio,2);
+  W=Math.round(wrap.clientWidth*dpr);
+  H=Math.round(wrap.clientHeight*dpr);
+  canvas.width=W; canvas.height=H;
+  canvas.style.width=wrap.clientWidth+'px';
+  canvas.style.height=wrap.clientHeight+'px';
+  fboFull=mkFBO(W,H);
+  const bw=Math.round(W/4), bh=Math.round(H/4);
+  fboBloomA=mkFBO(bw,bh);
+  fboBloomB=mkFBO(bw,bh);
+}
+resize();
+window.addEventListener('resize',resize);
+
+function frame(t){
+  const T=t*.001;
+
+  // Pass 1: Glow → FBO full
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fboFull.fb);
+  gl.viewport(0,0,W,H);
+  gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(glowProg);
+  gl.uniform1f(gU.time,T);
+  gl.uniform1f(gU.seed,seed);
+  gl.uniform1f(gU.aspect,W/H);
+  drawQuad();
+
+  // Pass 2: Downsample full → bloom A (bilinear filtering = free blur)
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fboBloomA.fb);
+  gl.viewport(0,0,fboBloomA.w,fboBloomA.h);
+  gl.useProgram(blurProg);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D,fboFull.tex);
+  gl.uniform1i(bU.tex,0);
+  gl.uniform2f(bU.dir,0,0); // no blur, just downsample
+  drawQuad();
+
+  // Pass 3: H-blur bloom A → bloom B (wide taps for big bloom)
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fboBloomB.fb);
+  gl.bindTexture(gl.TEXTURE_2D,fboBloomA.tex);
+  gl.uniform2f(bU.dir, 2.5/fboBloomA.w, 0);
+  drawQuad();
+
+  // Pass 4: V-blur bloom B → bloom A
+  gl.bindFramebuffer(gl.FRAMEBUFFER,fboBloomA.fb);
+  gl.bindTexture(gl.TEXTURE_2D,fboBloomB.tex);
+  gl.uniform2f(bU.dir, 0, 2.5/fboBloomA.h);
+  drawQuad();
+
+  // Pass 5: Composite → screen
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null);
+  gl.viewport(0,0,W,H);
+  gl.clearColor(0,0,0,1);gl.clear(gl.COLOR_BUFFER_BIT);
+  gl.useProgram(compProg);
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D,fboFull.tex);
+  gl.uniform1i(cU.sharp,0);
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D,fboBloomA.tex);
+  gl.uniform1i(cU.bloom,1);
+  gl.uniform1f(cU.str,1.5);
+  drawQuad();
+
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
 </script>
 </body>
 </html>
