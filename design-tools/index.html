@@ -17,7 +17,7 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root{
+:root,html[data-theme="dark"]{
   --bg:#0a0a0c;
   --surface:#141416;
   --border:#222228;
@@ -25,7 +25,30 @@
   --text2:#888;
   --text3:#555;
   --radius:10px;
-  --new:#10b981;
+  --hover-text:#fff;
+  color-scheme:dark;
+}
+html[data-theme="light"]{
+  --bg:#f5f5f3;
+  --surface:#e8e8e5;
+  --border:#ddd;
+  --text:#111;
+  --text2:#555;
+  --text3:#999;
+  --hover-text:#000;
+  color-scheme:light;
+}
+@media(prefers-color-scheme:light){
+  html:not([data-theme="dark"]){
+    --bg:#f5f5f3;
+    --surface:#e8e8e5;
+    --border:#ddd;
+    --text:#111;
+    --text2:#555;
+    --text3:#999;
+    --hover-text:#000;
+    color-scheme:light;
+  }
 }
 
 body{
@@ -146,7 +169,7 @@ header h1{
   color:var(--text2);
   transition:color 0.1s;
 }
-.tool-card:hover{color:#fff}
+.tool-card:hover{color:var(--hover-text)}
 
 .tool-favicon{
   width:14px;
@@ -155,8 +178,22 @@ header h1{
   flex-shrink:0;
   object-fit:contain;
 }
-.tool-favicon.invert{
+.tool-favicon.invert-dark{
   filter:invert(1) brightness(2);
+}
+html[data-theme="light"] .tool-favicon.invert-dark{
+  filter:none;
+}
+html[data-theme="light"] .tool-favicon.invert-light{
+  filter:invert(1) brightness(0.5);
+}
+@media(prefers-color-scheme:light){
+  html:not([data-theme="dark"]) .tool-favicon.invert-dark{
+    filter:none;
+  }
+  html:not([data-theme="dark"]) .tool-favicon.invert-light{
+    filter:invert(1) brightness(0.5);
+  }
 }
 
 .tool-name{
@@ -164,6 +201,33 @@ header h1{
   font-weight:400;
 }
 
+
+/* Theme toggle */
+.theme-toggle{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:2px;
+  background:var(--surface);
+  border-radius:8px;
+  padding:2px;
+}
+.theme-btn{
+  background:none;
+  border:none;
+  padding:5px 8px;
+  border-radius:6px;
+  font-family:inherit;
+  font-size:11px;
+  color:var(--text3);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.theme-btn:hover{color:var(--text2)}
+.theme-btn.active{
+  background:var(--border);
+  color:var(--text);
+}
 
 /* Footer */
 footer{
@@ -189,6 +253,11 @@ footer{
     <div class="search-wrap">
       <input type="text" class="search-field" id="searchField" placeholder="Search..." oninput="onSearch(this.value)">
       <div class="search-shortcut"><kbd>&#8984;</kbd><kbd>F</kbd></div>
+    </div>
+    <div class="theme-toggle">
+      <button class="theme-btn active" data-theme="system" onclick="setTheme('system')">System</button>
+      <button class="theme-btn" data-theme="dark" onclick="setTheme('dark')">Dark</button>
+      <button class="theme-btn" data-theme="light" onclick="setTheme('light')">Light</button>
     </div>
   </header>
   <main id="main"></main>
@@ -344,7 +413,7 @@ function getFaviconUrl(url) {
   } catch { return ''; }
 }
 
-// Favicons that are dark/black and need inverting on dark backgrounds
+// Favicons that are dark/black — need inverting in dark mode
 const DARK_FAVICONS = new Set([
   'godly.website','www.bezi.com','splice.com','zed.dev',
   'www.hudsandguis.com','interfaceingame.com','www.clo3d.com',
@@ -354,6 +423,23 @@ const DARK_FAVICONS = new Set([
   'cables.gl','www.tldraw.com','excalidraw.com',
   'motion-primitives.com','www.fancycomponents.dev','lumalabs.ai',
   'mobbin.com','www.unrealengine.com',
+]);
+
+// Favicons that are white/light — need inverting in light mode
+const LIGHT_FAVICONS = new Set([
+  'www.awwwards.com','www.cosmos.so','saaspo.com',
+  'bolt.new','replit.com','v0.dev',
+  'www.cursor.com','codeium.com',
+  'penpot.app','rive.app',
+  'nodes.io','nodetoy.co','paper.design','www.unicorn.studio',
+  'cavalry.scenegroup.co','jitter.video',
+  'recordly.dev','elevenlabs.io','suno.com',
+  'spline.design','womp.com',
+  'viewer.needle.tools','www.marvelousdesigner.com',
+  'www.kiriengine.app','poly.cam','superspl.at',
+  'miro.com',
+  'color.review','ray.so','regexr.com',
+  'parsec.app','www.raycast.com','www.warp.dev',
 ]);
 
 function render() {
@@ -366,9 +452,9 @@ function render() {
         ${section.tools.map(t => {
           let host = '';
           try { host = new URL(t.url).hostname; } catch {}
-          const inv = DARK_FAVICONS.has(host) ? ' invert' : '';
+          const cls = DARK_FAVICONS.has(host) ? ' invert-dark' : LIGHT_FAVICONS.has(host) ? ' invert-light' : '';
           return `<a class="tool-card" href="${t.url}" target="_blank" rel="noopener">
-            <img class="tool-favicon${inv}" src="${getFaviconUrl(t.url)}" alt="" loading="lazy" onerror="this.style.display='none'">
+            <img class="tool-favicon${cls}" src="${getFaviconUrl(t.url)}" alt="" loading="lazy" onerror="this.style.display='none'">
             <span class="tool-name">${t.name}</span>
           </a>`;
         }).join('')}
@@ -384,7 +470,28 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     document.getElementById('searchField').focus();
   }
+  if (e.key === 'Escape') {
+    const sf = document.getElementById('searchField');
+    if (document.activeElement === sf) {
+      sf.blur();
+    }
+  }
 });
+
+// Theme
+function setTheme(mode) {
+  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === mode));
+  if (mode === 'system') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', mode);
+  }
+  localStorage.setItem('theme', mode);
+}
+(function() {
+  const saved = localStorage.getItem('theme') || 'system';
+  setTheme(saved);
+})();
 
 function onSearch(q) {
   q = q.toLowerCase().trim();
