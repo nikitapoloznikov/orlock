@@ -309,9 +309,14 @@ html[data-theme="light"] .shader-wrap{
 
 @media(max-width:640px){
   .container{padding:0 16px}
+  header{flex-wrap:wrap;gap:10px;padding:20px 0 24px}
+  header h1{width:100%;margin-bottom:2px}
+  .search-field{width:120px;font-size:13px}
+  .search-field:focus{width:160px}
+  .search-shortcut{display:none}
   .category{flex-direction:column;gap:4px}
   .category-title{width:auto}
-  .shader-wrap{height:220px;margin-top:24px}
+  .shader-wrap{position:relative;height:200px}
 }
 </style>
 </head>
