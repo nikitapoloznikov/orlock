@@ -128,6 +128,42 @@ header h1{
   transition:opacity 0.25s ease;
 }
 
+/* Idea generator */
+.idea{
+  display:flex;
+  align-items:flex-start;
+  gap:8px;
+  font-size:12px;
+  font-weight:400;
+  color:var(--text3);
+  padding:28px 0 40px 0;
+  line-height:1.5;
+  max-width:700px;
+  position:relative;
+  isolation:isolate;
+  background:var(--bg);
+}
+.idea-gem{
+  width:38px;
+  height:38px;
+  flex-shrink:0;
+  object-fit:cover;
+  border-radius:3px;
+  transition:opacity 0.35s ease;
+  position:absolute;
+}
+.gem-dark{mix-blend-mode:screen;opacity:1;filter:contrast(1.4) brightness(1.05) blur(0.02px);margin-top:-4px;pointer-events:auto}
+.gem-light{mix-blend-mode:darken;opacity:0;width:53px;height:53px;margin-left:-3px;margin-top:-7px;filter:brightness(1.02) blur(0.02px);clip-path:inset(2% 2% 2% 10%);pointer-events:none}
+html[data-theme="light"] .gem-dark{opacity:0;pointer-events:none}
+html[data-theme="light"] .gem-light{opacity:1;pointer-events:auto}
+.idea-gem{cursor:pointer;transition:opacity 0.35s ease,transform 0.15s ease}
+.idea-gem:hover{transform:scale(1.1)}
+.idea-gem:active{transform:scale(0.9)}
+#idea{transition:opacity 0.25s ease}
+html[data-theme="light"] .gem-dark{opacity:0}
+html[data-theme="light"] .gem-light{opacity:1}
+#idea{padding-left:46px}
+
 /* Category row */
 .category{
   display:flex;
@@ -291,7 +327,7 @@ footer{
   width:100%;
   height:38vh;
   pointer-events:none;
-  z-index:0;
+  z-index:2;
 }
 .shader-wrap canvas{
   display:block;
@@ -335,6 +371,7 @@ html[data-theme="light"] .shader-wrap{
     </div>
   </header>
   <main id="main"></main>
+  <div class="idea"><video class="idea-gem gem-dark" src="gem.mp4" autoplay loop muted playsinline></video><video class="idea-gem gem-light" src="gem-light.mp4" autoplay loop muted playsinline></video><span id="idea"></span></div>
   <footer>&copy;2026 by Orlock</footer>
 </div>
 <div class="shader-wrap" id="shaderWrap"><canvas id="shaderCanvas"></canvas></div>
@@ -536,6 +573,54 @@ function render() {
 }
 
 render();
+
+// --- Idea generator ---
+const IDEAS=[
+"Use Figma + Claude Code to build a browser extension that analyzes any website's spacing system and generates a clean design token file you can drop into your codebase.",
+"Combine Spline + Rive + Claude Code to create a 3D product configurator where users rotate, customize, and export assets — deployed as a single-page app with no backend.",
+"Use Blender + gltfjsx + Claude Code to build a procedural terrain generator that turns elevation data into an interactive WebGL landscape with flythrough camera controls.",
+"Connect ElevenLabs + Claude Code to build a podcast website that auto-generates episode pages with AI voice summaries, waveform visualizers, and chapter markers from RSS.",
+"Use Figma MCP + Claude Code to build a CLI that reads your Figma file, diffs it against your React codebase, and generates a pull request with the visual changes.",
+"Combine TouchDesigner + Claude Code to create a real-time concert visual system that reacts to audio input and outputs to LED walls via NDI protocol.",
+"Use Paper + Claude Code to prototype a mobile banking app with working micro-interactions, then export the entire component library as production React Native code.",
+"Build a multiplayer creative coding arena with Theatre.js + Claude Code — users write shaders in split-screen, vote on results, and the winner's shader becomes the site background.",
+"Use Cavalry + Lottie Creator + Claude Code to build a motion design pipeline that converts After Effects-style keyframes into optimized Lottie files with a single CLI command.",
+"Combine Polycam + Three.js + Claude Code to build a web app that lets real estate agents scan a room with their phone and instantly publish an interactive 3D walkthrough.",
+"Use Excalidraw + Claude Code to build a whiteboard-to-wireframe tool that converts hand-drawn boxes and arrows into a working HTML prototype with proper CSS grid layout.",
+"Build a generative album cover tool with ShaderToy + Suno + Claude Code — enter a genre and mood, get AI-generated music with a matching real-time WebGL visual.",
+"Use Figma + Penpot + Claude Code to build a design system migration tool that converts Figma components to Penpot format while preserving variants, styles, and auto-layout.",
+"Combine cables.gl + ElevenLabs + Claude Code to create an interactive audio-reactive website where the visuals respond to AI-narrated content as users scroll.",
+"Use Raycast + Claude Code to build a developer launcher extension that searches your entire design system, previews components, and copies import statements in one keystroke.",
+"Build a CSS art generator with Claude Code that takes any SVG icon and recreates it using only box-shadows, gradients, and pseudo-elements — no images, fully scalable.",
+"Use Houdini + Claude Code to build a procedural architecture tool that generates parametric building facades from a set of rules and exports them as optimized glTF meshes.",
+"Combine Framer + Claude Code to create a personal website that adapts its layout, typography, and color scheme based on the visitor's local time, weather, and device.",
+"Use Miro MCP + Claude Code to build a meeting bot that joins your calls, transcribes discussions, and auto-populates a Miro board with sticky notes organized by topic.",
+"Build a real-time font pairing tool with Claude Code that takes a headline typeface and instantly generates 10 body font recommendations with live preview and contrast scores.",
+"Use Luma AI + Claude Code to build a street-view-style web app for museums — scan galleries with your phone and publish a navigable 3D gaussian splat exhibit online.",
+"Combine Rive + Claude Code to build an interactive onboarding flow where animated characters respond to user input in real time, with branching paths and state persistence.",
+"Use tldraw + Claude Code to create a diagram-to-infrastructure tool — draw your cloud architecture on a whiteboard and generate working Terraform configs from the shapes.",
+"Build a competitive design benchmark with Figma MCP + Claude Code that scores websites on typography, spacing, color contrast, and interaction quality against 500 top sites.",
+"Use Spline + Claude Code to build a physics-based portfolio where each project is a 3D object on a table — visitors can grab, toss, and stack them with mouse or touch.",
+"Combine FMOD + Claude Code to build an adaptive soundtrack engine for web apps that crossfades between audio layers based on scroll position, time spent, and user actions.",
+"Use Blender + Claude Code to create a parametric furniture designer — adjust dimensions with sliders, preview in AR via WebXR, and export manufacturing-ready files.",
+"Build an AI design review bot with Figma MCP + Claude Code that comments on your Figma frames with specific feedback on alignment, hierarchy, and WCAG compliance.",
+"Use NodeToy + Claude Code to build a shader curriculum — an interactive website where each lesson lets students edit GLSL live with AI hints and visual output.",
+"Combine Depthkit + Three.js + Claude Code to build a volumetric video player for the web that streams holographic recordings with real-time lighting and camera controls.",
+];
+const ideaEl=document.getElementById('idea');
+let lastIdea=-1;
+function showIdea(){
+  let idx;
+  do{idx=Math.floor(Math.random()*IDEAS.length)}while(idx===lastIdea);
+  lastIdea=idx;
+  ideaEl.textContent=IDEAS[idx];
+}
+function cycleIdea(){
+  ideaEl.style.opacity='0';
+  setTimeout(()=>{showIdea();ideaEl.style.opacity='1';},250);
+}
+showIdea();
+document.querySelectorAll('.idea-gem').forEach(g=>g.addEventListener('click',cycleIdea));
 
 document.addEventListener('keydown', e => {
   const sf = document.getElementById('searchField');
