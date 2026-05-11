@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a0a0c">
+<title>Jazari — Join the waitlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0a0c;
+  --bg-2:#101014;
+  --fg:#ffffff;
+  --fg-dim:rgba(255,255,255,0.5);
+  --fg-soft:rgba(255,255,255,0.65);
+  --line:rgba(255,255,255,0.08);
+  --line-2:rgba(255,255,255,0.14);
+  --accent:#E8C56B;
+  --accent-warm:#d4af5f;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  background:var(--bg);
+  color:var(--fg);
+  font-family:'Inter',system-ui,-apple-system,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+/* Ambient background glow */
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(900px circle at 15% 30%, rgba(232,197,107,0.06), transparent 50%),
+    radial-gradient(700px circle at 85% 70%, rgba(232,197,107,0.04), transparent 55%);
+  pointer-events:none;
+  z-index:0;
+}
+
+/* Nav */
+.nav{
+  position:fixed;
+  top:0;left:0;right:0;
+  padding:22px 24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  z-index:50;
+  mix-blend-mode:difference;
+}
+.nav .logo{
+  font-weight:800;
+  letter-spacing:-0.02em;
+  font-size:18px;
+}
+.nav .logo .dot{color:var(--accent)}
+.nav-meta{
+  font-size:12px;
+  font-weight:500;
+  color:var(--fg-dim);
+  letter-spacing:0.02em;
+}
+@media (max-width:540px){
+  .nav-meta{display:none}
+}
+
+/* Layout */
+.wrap{
+  position:relative;
+  z-index:1;
+  min-height:100vh;
+  padding:108px 22px 32px;
+  display:flex;
+  flex-direction:column;
+  gap:44px;
+}
+.left{width:100%}
+.right{width:100%}
+
+@media (min-width:1024px){
+  .wrap{
+    flex-direction:row;
+    align-items:center;
+    max-width:1380px;
+    margin:0 auto;
+    gap:88px;
+    padding:120px 56px 48px;
+    min-height:calc(100vh - 110px);
+  }
+  .left{flex:0 0 56%}
+  .right{flex:0 0 44%}
+}
+
+/* Headline block */
+.eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:6px 12px 6px 10px;
+  border:1px solid var(--line-2);
+  border-radius:999px;
+  font-size:11px;
+  font-weight:500;
+  color:var(--fg-soft);
+  letter-spacing:0.06em;
+  text-transform:uppercase;
+  margin-bottom:24px;
+  backdrop-filter:blur(6px);
+}
+.eyebrow::before{
+  content:'';
+  width:6px;height:6px;
+  background:var(--accent);
+  border-radius:50%;
+  box-shadow:0 0 10px var(--accent);
+  animation:pulse 2.2s infinite;
+}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.45;transform:scale(0.85)}
+}
+
+.headline{
+  font-size:clamp(44px,7.4vw,84px);
+  font-weight:900;
+  line-height:0.96;
+  letter-spacing:-0.038em;
+  margin-bottom:22px;
+}
+.headline em{
+  font-family:'Instrument Serif',serif;
+  font-style:italic;
+  font-weight:400;
+  color:var(--accent);
+  letter-spacing:-0.01em;
+}
+
+.sub{
+  font-size:clamp(15px,1.5vw,18px);
+  line-height:1.55;
+  color:var(--fg-soft);
+  max-width:480px;
+  margin-bottom:32px;
+  letter-spacing:-0.005em;
+}
+
+/* Form */
+.form{
+  position:relative;
+  max-width:480px;
+}
+.form-wrap{
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,0.035);
+  border:1px solid var(--line-2);
+  border-radius:14px;
+  transition:border-color 0.25s ease,background 0.25s ease,box-shadow 0.25s ease;
+}
+.form-wrap:focus-within{
+  border-color:var(--accent);
+  background:rgba(232,197,107,0.05);
+  box-shadow:0 0 0 4px rgba(232,197,107,0.08);
+}
+.form input[type="email"]{
+  flex:1;
+  min-width:0;
+  background:transparent;
+  border:0;
+  outline:0;
+  color:var(--fg);
+  font-family:inherit;
+  font-size:16px;
+  padding:18px 18px;
+  letter-spacing:-0.005em;
+}
+.form input::placeholder{color:rgba(255,255,255,0.32)}
+.form button{
+  background:var(--fg);
+  color:var(--bg);
+  border:0;
+  cursor:pointer;
+  font-family:inherit;
+  font-weight:600;
+  font-size:15px;
+  padding:11px 18px;
+  margin:6px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  transition:transform 0.18s ease,background 0.18s ease,color 0.18s ease;
+  white-space:nowrap;
+}
+.form button .arrow{display:inline-block;transition:transform 0.2s ease}
+.form button:hover{background:var(--accent);color:var(--bg)}
+.form button:hover .arrow{transform:translateX(3px)}
+.form button:active{transform:scale(0.97)}
+
+.counter{
+  margin-top:16px;
+  font-size:13px;
+  color:var(--fg-dim);
+  font-variant-numeric:tabular-nums;
+  letter-spacing:-0.005em;
+}
+.counter .num{color:var(--fg);font-weight:600}
+.counter .pos{color:var(--accent);font-weight:600}
+.counter .sep{margin:0 8px;opacity:0.4}
+
+.trust{
+  margin-top:28px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:12px;
+  color:var(--fg-dim);
+}
+.trust .avatars{
+  display:flex;
+}
+.trust .avatars span{
+  width:24px;height:24px;
+  border-radius:50%;
+  border:2px solid var(--bg);
+  margin-left:-8px;
+  background:linear-gradient(135deg,#888,#444);
+}
+.trust .avatars span:first-child{margin-left:0;background:linear-gradient(135deg,#E8C56B,#a37b30)}
+.trust .avatars span:nth-child(2){background:linear-gradient(135deg,#6B9CE8,#2c4d80)}
+.trust .avatars span:nth-child(3){background:linear-gradient(135deg,#E86B8A,#7a2c3f)}
+.trust .avatars span:nth-child(4){background:linear-gradient(135deg,#8ECF7F,#3e6234)}
+
+/* Card stage */
+.card-stage{
+  position:relative;
+  perspective:1400px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:300px;
+  padding:8px;
+}
+@media (min-width:1024px){
+  .card-stage{min-height:440px}
+}
+
+.card{
+  position:relative;
+  width:100%;
+  max-width:380px;
+  aspect-ratio:1.586/1;
+  border-radius:22px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(232,197,107,0.22) 0%, transparent 55%),
+    radial-gradient(140% 100% at 100% 100%, rgba(232,197,107,0.08) 0%, transparent 60%),
+    linear-gradient(140deg,#1c1c22 0%,#0e0e12 100%);
+  box-shadow:
+    0 30px 70px -22px rgba(0,0,0,0.85),
+    0 10px 30px -10px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.06) inset,
+    0 1px 0 rgba(255,255,255,0.14) inset;
+  padding:22px;
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  transform:rotateX(8deg) rotateY(-12deg);
+  transition:transform 0.6s cubic-bezier(0.23,1,0.32,1);
+  overflow:hidden;
+  transform-style:preserve-3d;
+  will-change:transform;
+}
+.card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(115deg,transparent 38%,rgba(255,255,255,0.07) 50%,transparent 62%);
+  pointer-events:none;
+  mix-blend-mode:overlay;
+}
+.card::after{
+  content:'';
+  position:absolute;
+  inset:-1px;
+  border-radius:22px;
+  background:linear-gradient(135deg,rgba(232,197,107,0.5),transparent 30%,transparent 70%,rgba(232,197,107,0.2));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  padding:1px;
+  pointer-events:none;
+  opacity:0.6;
+}
+
+.card-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  position:relative;
+  z-index:1;
+}
+.card-brand{
+  font-weight:800;
+  letter-spacing:-0.02em;
+  font-size:17px;
+}
+.card-brand .dot{color:var(--accent)}
+.card-chip{
+  width:40px;
+  height:30px;
+  border-radius:5px;
+  background:linear-gradient(135deg,#d4af5f 0%,#f1d88a 45%,#b6924a 100%);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.45),inset 0 -1px 0 rgba(0,0,0,0.25);
+  position:relative;
+}
+.card-chip::before{
+  content:'';
+  position:absolute;
+  inset:5px;
+  border-radius:3px;
+  background:
+    linear-gradient(to right,transparent 32%,rgba(0,0,0,0.18) 32% 34%,transparent 34% 66%,rgba(0,0,0,0.18) 66% 68%,transparent 68%),
+    linear-gradient(to bottom,transparent 32%,rgba(0,0,0,0.18) 32% 34%,transparent 34% 66%,rgba(0,0,0,0.18) 66% 68%,transparent 68%);
+}
+
+.card-mid{position:relative;z-index:1}
+.card-label{
+  font-size:9.5px;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--fg-dim);
+  margin-bottom:6px;
+}
+.card-email{
+  font-size:clamp(14px,1.3vw,16px);
+  font-weight:500;
+  letter-spacing:-0.005em;
+  color:var(--fg);
+  min-height:22px;
+  word-break:break-all;
+  transition:color 0.2s ease;
+}
+.card-email.placeholder{color:rgba(255,255,255,0.22)}
+
+.card-bottom{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  position:relative;
+  z-index:1;
+}
+.card-foot{
+  font-size:9.5px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--fg-dim);
+  font-variant-numeric:tabular-nums;
+}
+.card-logo{
+  width:46px;height:30px;
+  border-radius:4px;
+  background:linear-gradient(135deg,var(--accent) 0%,var(--accent-warm) 100%);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:900;
+  font-size:13px;
+  color:var(--bg);
+  letter-spacing:-0.03em;
+  box-shadow:0 4px 12px -2px rgba(232,197,107,0.4);
+}
+
+/* Country strip */
+.strip{
+  position:relative;
+  z-index:1;
+  max-width:1380px;
+  margin:0 auto;
+  padding:24px 22px 36px;
+  border-top:1px solid var(--line);
+  margin-top:8px;
+}
+@media (min-width:1024px){
+  .strip{padding:28px 56px 44px}
+}
+.strip-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:18px;
+}
+.strip-label{
+  font-size:11px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--fg-dim);
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.strip-label::before{
+  content:'';
+  width:6px;height:6px;
+  background:#4ade80;
+  border-radius:50%;
+  box-shadow:0 0 8px #4ade80;
+  animation:pulse 1.8s infinite;
+}
+.strip-meta{
+  font-size:11px;
+  color:var(--fg-dim);
+  font-variant-numeric:tabular-nums;
+}
+.strip-flags{
+  display:flex;
+  gap:24px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  padding-bottom:4px;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent);
+          mask-image:linear-gradient(to right,transparent,#000 24px,#000 calc(100% - 24px),transparent);
+}
+.strip-flags::-webkit-scrollbar{display:none}
+.strip-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  white-space:nowrap;
+  font-size:14px;
+  color:var(--fg-soft);
+  letter-spacing:-0.005em;
+}
+.strip-item .flag{font-size:22px;line-height:1}
+.strip-item .time{
+  font-size:11px;
+  color:var(--fg-dim);
+  margin-left:4px;
+}
+
+/* Success state */
+.form.done .form-wrap{
+  border-color:var(--accent);
+  background:rgba(232,197,107,0.06);
+}
+.form.done input{opacity:0.6}
+.form.done button{background:var(--accent);color:var(--bg)}
+
+/* Reduced motion */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;transition:none !important}
+  .card{transform:none !important}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="logo">Jazari<span class="dot">.</span></div>
+  <div class="nav-meta">Banking · Cards · Credit</div>
+</nav>
+
+<main class="wrap">
+  <section class="left">
+    <div class="eyebrow">Founding members · Closing soon</div>
+    <h1 class="headline">Banking that<br><em>travels</em> with you.</h1>
+    <p class="sub">For the 281&nbsp;million people living between two countries. Send, spend and borrow without the fees, the FX games, or the questions you can't answer in two languages.</p>
+
+    <form class="form" id="form" onsubmit="event.preventDefault(); handleSubmit();">
+      <div class="form-wrap">
+        <input type="email" id="email" placeholder="you@everywhere.com" autocomplete="email" required spellcheck="false">
+        <button type="submit">Join<span class="arrow">→</span></button>
+      </div>
+      <p class="counter">
+        <span class="num" id="count">24,812</span> already in line
+        <span class="sep">·</span>
+        You'll be <span class="pos" id="pos">#24,813</span>
+      </p>
+
+      <div class="trust">
+        <div class="avatars" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </div>
+        <span>Joined in the last hour from 47 countries</span>
+      </div>
+    </form>
+  </section>
+
+  <section class="right">
+    <div class="card-stage" id="stage">
+      <div class="card" id="card">
+        <div class="card-top">
+          <span class="card-brand">Jazari<span class="dot">.</span></span>
+          <div class="card-chip" aria-hidden="true"></div>
+        </div>
+        <div class="card-mid">
+          <p class="card-label">Founding Member</p>
+          <p class="card-email placeholder" id="cardEmail">you@everywhere.com</p>
+        </div>
+        <div class="card-bottom">
+          <span class="card-foot">No. <span id="cardNo">24,813</span> · 2026</span>
+          <div class="card-logo">JZ</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="strip">
+  <div class="strip-head">
+    <span class="strip-label">Live signups</span>
+    <span class="strip-meta">Last hour</span>
+  </div>
+  <div class="strip-flags">
+    <div class="strip-item"><span class="flag">🇵🇭</span>Manila<span class="time">2m</span></div>
+    <div class="strip-item"><span class="flag">🇳🇬</span>Lagos<span class="time">4m</span></div>
+    <div class="strip-item"><span class="flag">🇲🇽</span>Mexico City<span class="time">6m</span></div>
+    <div class="strip-item"><span class="flag">🇵🇰</span>Karachi<span class="time">11m</span></div>
+    <div class="strip-item"><span class="flag">🇷🇴</span>Bucharest<span class="time">14m</span></div>
+    <div class="strip-item"><span class="flag">🇮🇳</span>Mumbai<span class="time">22m</span></div>
+    <div class="strip-item"><span class="flag">🇧🇷</span>São Paulo<span class="time">28m</span></div>
+    <div class="strip-item"><span class="flag">🇪🇬</span>Cairo<span class="time">34m</span></div>
+    <div class="strip-item"><span class="flag">🇻🇳</span>Hanoi<span class="time">41m</span></div>
+    <div class="strip-item"><span class="flag">🇹🇷</span>Istanbul<span class="time">49m</span></div>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const emailIn = document.getElementById('email');
+  const cardEmail = document.getElementById('cardEmail');
+  const placeholder = 'you@everywhere.com';
+
+  emailIn.addEventListener('input', () => {
+    const val = emailIn.value.trim();
+    if (val) {
+      cardEmail.textContent = val;
+      cardEmail.classList.remove('placeholder');
+    } else {
+      cardEmail.textContent = placeholder;
+      cardEmail.classList.add('placeholder');
+    }
+  });
+
+  // 3D parallax — pointer:fine only
+  const stage = document.getElementById('stage');
+  const card = document.getElementById('card');
+  if (window.matchMedia('(pointer:fine)').matches) {
+    let raf = 0;
+    stage.addEventListener('mousemove', (e) => {
+      const r = stage.getBoundingClientRect();
+      const x = (e.clientX - r.left) / r.width - 0.5;
+      const y = (e.clientY - r.top) / r.height - 0.5;
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        card.style.transform = `rotateX(${8 - y * 12}deg) rotateY(${-12 + x * 16}deg)`;
+      });
+    });
+    stage.addEventListener('mouseleave', () => {
+      card.style.transform = 'rotateX(8deg) rotateY(-12deg)';
+    });
+  }
+
+  // Animated counter
+  const countEl = document.getElementById('count');
+  const posEl = document.getElementById('pos');
+  const cardNo = document.getElementById('cardNo');
+  let count = 24812;
+  const fmt = (n) => n.toLocaleString('en-US');
+  setInterval(() => {
+    if (Math.random() < 0.6) count += 1;
+    countEl.textContent = fmt(count);
+    posEl.textContent = '#' + fmt(count + 1);
+    cardNo.textContent = fmt(count + 1);
+  }, 2800);
+
+  // Submit
+  window.handleSubmit = () => {
+    const form = document.getElementById('form');
+    const btn = form.querySelector('button');
+    form.classList.add('done');
+    btn.innerHTML = "You're in <span>✓</span>";
+    emailIn.setAttribute('readonly', 'readonly');
+  };
+})();
+</script>
+</body>
+</html>
